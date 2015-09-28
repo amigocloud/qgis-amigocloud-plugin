@@ -1,5 +1,5 @@
 <RCC>
-    <qresource prefix="/plugins/amigocloud" >
+    <qresource prefix="/plugins/AmigoCloud" >
         <file>icon.png</file>
     </qresource>
 </RCC>

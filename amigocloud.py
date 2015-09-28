@@ -29,7 +29,7 @@ from amigocloud_dialog import amigocloudDialog
 import os.path
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
 
-class amigocloud:
+class AmigoCloud:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -63,10 +63,10 @@ class amigocloud:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&amigocloud')
+        self.menu = self.tr(u'&AmigoCloud')
         # TODO: We are going to let the user set this up in a future iteration
-        self.toolbar = self.iface.addToolBar(u'amigocloud')
-        self.toolbar.setObjectName(u'amigocloud')
+        self.toolbar = self.iface.addToolBar(u'AmigoCloud')
+        self.toolbar.setObjectName(u'AmigoCloud')
 
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
@@ -81,7 +81,7 @@ class amigocloud:
         :rtype: QString
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('amigocloud', message)
+        return QCoreApplication.translate('AmigoCloud', message)
 
 
     def add_action(
@@ -172,7 +172,7 @@ class amigocloud:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginWebMenu(
-                self.tr(u'&amigocloud'),
+                self.tr(u'&AmigoCloud'),
                 action)
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
@@ -187,13 +187,9 @@ class amigocloud:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-        
-            # ---------------------------------------
-            # Ragi, here follows Your Code
-            # ---------------------------------------
-
-		os.environ['AMIGOCLOUD_API_KEY'] = <API_KEY>
-		uri = "AmigoCloud:3334 tables=26084"
-		vlayer = QgsVectorLayer(uri, "States", "ogr")
-		QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+            os.environ['AMIGOCLOUD_API_KEY'] = self.dlg.apiKeyEdit.text()
+            uri = "AmigoCloud:" + self.dlg.projectIdEdit.text() + " tables=" + self.dlg.datasetIdEdit.text()
+            vlayer = QgsVectorLayer(uri, self.dlg.layerNameEdit.text(), "ogr")
+            QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+            self.dlg.store_values()
 

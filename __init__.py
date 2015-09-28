@@ -25,11 +25,11 @@
 
 # noinspection PyPep8Naming
 def classFactory(iface):  # pylint: disable=invalid-name
-    """Load amigocloud class from file amigocloud.
+    """Load AmigoCloud class from file AmigoCloud.
 
     :param iface: A QGIS interface instance.
     :type iface: QgsInterface
     """
     #
-    from .amigocloud import amigocloud
-    return amigocloud(iface)
+    from .amigocloud import AmigoCloud
+    return AmigoCloud(iface)

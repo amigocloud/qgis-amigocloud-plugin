@@ -7,17 +7,17 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=amigocloud
+name=AmigoCloud
 qgisMinimumVersion=2.0
-description=amigocloud
+description=AmigoCloud
 version=0.1
-author=amigocloud
-email=geodrinx@gmail.com
+author=AmigoCloud
+email=victor@amigocloud.com
 
 about=This is the AmigoCloud plugin
 
-tracker=https://github.com/geodrinx/amigocloud/issues/
-repository=https://github.com/geodrinx/amigocloud
+tracker=https://github.com/amigocloud/qgis-amigocloud-plugin/issues/
+repository=https://github.com/amigocloud/qgis-amigocloud-plugin
 # End of mandatory metadata
 
 # Recommended items:
@@ -28,7 +28,7 @@ repository=https://github.com/geodrinx/amigocloud
 # Tags are comma separated with spaces allowed
 tags=webservice, web, wfs, wms
 
-homepage=http://plugins.qgis.org/plugins/amigocloud/
+homepage=http://plugins.qgis.org/plugins/AmigoCloud/
 category=Web
 icon=icon.png
 # experimental flag

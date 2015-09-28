@@ -10,7 +10,7 @@
 
 __author__ = 'geodrinx@gmail.com'
 __date__ = '2015-09-25'
-__copyright__ = 'Copyright 2015, amigocloud'
+__copyright__ = 'Copyright 2015, AmigoCloud'
 
 import unittest
 
