@@ -28,7 +28,7 @@ repository=https://github.com/amigocloud/qgis-amigocloud-plugin
 # Tags are comma separated with spaces allowed
 tags=webservice, web, wfs, wms
 
-homepage=http://plugins.qgis.org/plugins/AmigoCloud/
+homepage=http://plugins.qgis.org/plugins/qgis-amigocloud-plugin/
 category=Web
 icon=icon.png
 # experimental flag

@@ -7,8 +7,8 @@
                               -------------------
         begin                : 2015-09-25
         git sha              : $Format:%H$
-        copyright            : (C) 2015 by amigocloud
-        email                : geodrinx@gmail.com
+        copyright            : (C) 2015 by AmigoCloud
+        email                : victor@amigocloud.com
  ***************************************************************************/
 
 /***************************************************************************
