@@ -12,7 +12,7 @@ This is a Python plugin for QGIS enabling AmigoCloud GDAL data source
 
 Both Project ID and Dataset ID can be found in the AmigoCloud dashboard URL:
 ![alt text](http://i.imgur.com/HGxciCh.png)
-4. "AmigoCloud API Token" can be generated [Here](https://www.amigocloud.com/accounts/tokens/). After the API token is generated with required access permissions, copy and paste it the AmigoCloud plugin dialog
+4. "AmigoCloud API Token" can be generated [Here](https://www.amigocloud.com/accounts/tokens/). After the API token is generated with required access permissions, copy and paste it in the AmigoCloud plugin dialog
 
 Now the AmigoCloud dataset can be viewed, edited, and synced back using QGIS!
 ![alt text](http://i.imgur.com/u0fYAts.png)
