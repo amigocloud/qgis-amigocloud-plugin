@@ -14,7 +14,7 @@ version=0.1
 author=AmigoCloud
 email=victor@amigocloud.com
 
-about=This is the AmigoCloud plugin
+about=The AmigoCloud plugin allows to connect QGIS to AmigoCloud backend using AmigoCloud GDAL data source
 
 tracker=https://github.com/amigocloud/qgis-amigocloud-plugin/issues/
 repository=https://github.com/amigocloud/qgis-amigocloud-plugin
