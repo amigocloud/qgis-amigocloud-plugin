@@ -43,9 +43,15 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
         self.apiKeyValue = self.settings.value('apiKeyValue')
 
         layerName = QtGui.QLabel('Layer Name')
-        projectId = QtGui.QLabel('Project Id')
-        datasetId = QtGui.QLabel('Dataset Id')
-        apiKey = QtGui.QLabel('API_KEY')
+
+        projectId = QtGui.QLabel("<a href=\"https://www.amigocloud.com/dashboard/index.html#/user-dashboard\"> <font face=verdana>Project ID</font> </a>")
+        projectId.setOpenExternalLinks(True)
+
+        datasetId = QtGui.QLabel("<a href=\"https://www.amigocloud.com/dashboard/index.html#/user-dashboard\"> <font face=verdana>Dataset ID</font> </a>")
+        datasetId.setOpenExternalLinks(True)
+
+        apiKey = QtGui.QLabel("<a href=\"https://www.amigocloud.com/accounts/tokens\"> <font face=verdana>AmigoCloud API Token</font> </a>")
+        apiKey.setOpenExternalLinks(True)
 
         self.layerNameEdit = QtGui.QLineEdit(self.nameValue)
         self.projectIdEdit = QtGui.QLineEdit(self.projectIdValue)
