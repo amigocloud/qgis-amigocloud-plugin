@@ -69,18 +69,18 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
     def get_dataset_id(self):
         return self.settings.value('datasetIdValue')
 
+    def get_token(self):
+        return self.settings.value('tokenValue')
+
     def load_image(self, url):
-        # url = 'http://www.google.com/images/srpr/logo1w.png'
         url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
-        print(url)
         data = urllib.request.urlopen(url).read()
         image = QtGui.QImage()
         image.loadFromData(data)
         return image
 
     def on_token_changed(self, token):
-        print(token)
-        os.environ['AMIGOCLOUD_API_KEY'] = token
+        self.settings.setValue('tokenValue', token)
 
     def dataset_clicked(self, item):
         print("Dataset clicked: ", str(item.text()), str(item.data(Qt.UserRole)))

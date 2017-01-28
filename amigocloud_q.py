@@ -187,9 +187,11 @@ class AmigoCloudQ:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            # os.environ['AMIGOCLOUD_API_KEY'] = self.dlg.apiKeyEdit.text()
-            uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
+            uri = ''
+            if len(self.dlg.get_token()) > 0:
+                uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + " API_KEY=" + self.dlg.get_token()
+            else:
+                uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
             vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
             QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-            # self.dlg.store_values()
 
