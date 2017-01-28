@@ -22,9 +22,12 @@
 """
 
 import os
+import urllib
 
 from PyQt4 import QtGui, uic
-from PyQt4.QtCore import QSettings
+from PyQt4.QtCore import QSettings, Qt
+
+from amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'amigocloud_dialog_base.ui'))
@@ -35,50 +38,73 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
         """Constructor."""
         super(amigocloudDialog, self).__init__(parent)
 
-        self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
+        self.amigo_api = AmigoAPI()
+        self.projects_list = self.amigo_api.fetch_project_list()
 
-        self.nameValue = self.settings.value('nameValue')
-        self.projectIdValue = self.settings.value('projectIdValue')
-        self.datasetIdValue = self.settings.value('datasetIdValue')
+        self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
+        self.setupUi(self)
+        self.p_list_widget = self.findChild(QtGui.QListWidget, 'projects_listWidget')  # QtGui.QListWidget()
+        self.p_list_widget.itemClicked.connect(self.project_clicked)
+
+        self.ds_list_widget = self.findChild(QtGui.QListWidget, 'datasets_listWidget')  # QtGui.QListWidget()
+        self.ds_list_widget.itemClicked.connect(self.dataset_clicked)
+
         self.apiKeyValue = self.settings.value('apiKeyValue')
 
-        layerName = QtGui.QLabel('Layer Name')
+        self.token_lineEdit = self.findChild(QtGui.QLineEdit, 'token_lineEdit')  # QtGui.QLineEdit(self.apiKeyValue)
+        self.token_lineEdit.textChanged.connect(self.on_token_changed)
 
-        projectId = QtGui.QLabel("<a href=\"https://www.amigocloud.com/dashboard/index.html#/user-dashboard\"> <font face=verdana>Project ID</font> </a>")
-        projectId.setOpenExternalLinks(True)
+        self.p_list_widget = self.findChild(QtGui.QListWidget, 'projects_listWidget')  # QtGui.QListWidget()
+        self.p_list_widget.itemClicked.connect(self.project_clicked)
 
-        datasetId = QtGui.QLabel("<a href=\"https://www.amigocloud.com/dashboard/index.html#/user-dashboard\"> <font face=verdana>Dataset ID</font> </a>")
-        datasetId.setOpenExternalLinks(True)
+        self.fill_project_list()
+        self.setFixedSize(800, 460)
 
-        apiKey = QtGui.QLabel("<a href=\"https://www.amigocloud.com/accounts/tokens\"> <font face=verdana>AmigoCloud API Token</font> </a>")
-        apiKey.setOpenExternalLinks(True)
+    def get_name(self):
+        return self.settings.value('nameValue')
 
-        self.layerNameEdit = QtGui.QLineEdit(self.nameValue)
-        self.projectIdEdit = QtGui.QLineEdit(self.projectIdValue)
-        self.datasetIdEdit = QtGui.QLineEdit(self.datasetIdValue)
-        self.apiKeyEdit = QtGui.QLineEdit(self.apiKeyValue)
+    def get_project_id(self):
+        return self.settings.value('projectIdValue')
 
-        grid = QtGui.QGridLayout()
-        grid.setSpacing(-10)
+    def get_dataset_id(self):
+        return self.settings.value('datasetIdValue')
 
-        grid.addWidget(layerName, 0, 0)
-        grid.addWidget(self.layerNameEdit, 0, 1)
+    def load_image(self, url):
+        # url = 'http://www.google.com/images/srpr/logo1w.png'
+        url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
+        print(url)
+        data = urllib.request.urlopen(url).read()
+        image = QtGui.QImage()
+        image.loadFromData(data)
+        return image
 
-        grid.addWidget(projectId, 1, 0)
-        grid.addWidget(self.projectIdEdit, 1, 1)
+    def on_token_changed(self, token):
+        print(token)
+        os.environ['AMIGOCLOUD_API_KEY'] = token
 
-        grid.addWidget(datasetId, 2, 0)
-        grid.addWidget(self.datasetIdEdit, 2, 1)
+    def dataset_clicked(self, item):
+        print("Dataset clicked: ", str(item.text()), str(item.data(Qt.UserRole)))
+        self.settings.setValue('datasetIdValue', str(item.data(Qt.UserRole)))
+        self.settings.setValue('nameValue', str(item.text()))
 
-        grid.addWidget(apiKey, 3, 0)
-        grid.addWidget(self.apiKeyEdit, 3, 1)
+    def fill_datasets_list(self, project_id):
+        self.ds_list_widget.clear()
+        dataset_list = self.amigo_api.fetch_dataset_list(project_id)
+        for dataset in dataset_list:
+            if dataset['visible']:
+                item = QtGui.QListWidgetItem(dataset['name'], self.ds_list_widget)
+                item.setData(Qt.UserRole, dataset['id'])
+                self.ds_list_widget.addItem(item)
 
-        self.setLayout(grid)
-        self.setFixedSize(450, 280)
-        self.setupUi(self)
+    def project_clicked(self, item):
+        print("Project clicked: ", str(item.text()), str(item.data(Qt.UserRole)))
+        self.fill_datasets_list(str(item.data(Qt.UserRole)))
+        self.settings.setValue('projectIdValue', str(item.data(Qt.UserRole)))
 
-    def store_values(self):
-        self.settings.setValue('nameValue', self.layerNameEdit.text())
-        self.settings.setValue('projectIdValue', self.projectIdEdit.text())
-        self.settings.setValue('datasetIdValue', self.datasetIdEdit.text())
-        self.settings.setValue('apiKeyValue', self.apiKeyEdit.text())
+    def fill_project_list(self):
+        for project in self.projects_list:
+            item = QtGui.QListWidgetItem(project['name'], self.p_list_widget)
+            item.setData(Qt.UserRole, project['id'])
+            self.p_list_widget.addItem(item)
+        return self.p_list_widget
+

@@ -29,7 +29,7 @@ from amigocloud_dialog import amigocloudDialog
 import os.path
 from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
 
-class AmigoCloud:
+class AmigoCloudQ:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -187,9 +187,9 @@ class AmigoCloud:
         result = self.dlg.exec_()
         # See if OK was pressed
         if result:
-            os.environ['AMIGOCLOUD_API_KEY'] = self.dlg.apiKeyEdit.text()
-            uri = "AmigoCloud:" + self.dlg.projectIdEdit.text() + " tables=" + self.dlg.datasetIdEdit.text()
-            vlayer = QgsVectorLayer(uri, self.dlg.layerNameEdit.text(), "ogr")
+            # os.environ['AMIGOCLOUD_API_KEY'] = self.dlg.apiKeyEdit.text()
+            uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
+            vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
             QgsMapLayerRegistry.instance().addMapLayer(vlayer)
-            self.dlg.store_values()
+            # self.dlg.store_values()
 

@@ -31,5 +31,5 @@ def classFactory(iface):  # pylint: disable=invalid-name
     :type iface: QgsInterface
     """
     #
-    from .amigocloud import AmigoCloud
-    return AmigoCloud(iface)
+    from .amigocloud_q import AmigoCloudQ
+    return AmigoCloudQ(iface)
