@@ -10,7 +10,7 @@
 name=AmigoCloud
 qgisMinimumVersion=2.0
 description=AmigoCloud
-version=0.1
+version=0.2
 author=AmigoCloud
 email=victor@amigocloud.com
 
@@ -26,13 +26,13 @@ repository=https://github.com/amigocloud/qgis-amigocloud-plugin
 # changelog=
 
 # Tags are comma separated with spaces allowed
-tags=webservice, web, wfs, wms
+tags=webservice, web, wfs, wms, gis
 
 homepage=http://plugins.qgis.org/plugins/qgis-amigocloud-plugin/
 category=Web
 icon=icon.png
 # experimental flag
-experimental=True
+experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
