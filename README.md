@@ -7,4 +7,4 @@ Python plugin for QGIS enabling AmigoCloud GDAL data source. This plugin allows 
 
 Select a project and dataset.
 
-[Tutorial to configure AmigoCLoud plugin](http://help.amigocloud.com/hc/en-us/articles/115000538123)
+[Tutorial to configure AmigoCloud plugin](http://help.amigocloud.com/hc/en-us/articles/115000538123)
