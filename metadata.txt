@@ -8,7 +8,7 @@
 
 [general]
 name=AmigoCloud
-qgisMinimumVersion=2.0
+qgisMinimumVersion=2.18
 description=AmigoCloud
 version=0.2
 author=AmigoCloud

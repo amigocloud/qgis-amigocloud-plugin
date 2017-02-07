@@ -1,5 +1,5 @@
 # AmigoCloud QGIS Plugin
-Pyhton plugin for QGIS enabling AmigoCloud GDAL data source. This plugin allows adding AmigoCloud vector datasets as layers to QGIS for read-write access.   
+Python plugin for QGIS enabling AmigoCloud GDAL data source. This plugin allows adding AmigoCloud vector datasets as layers to QGIS for read-write access.   
 
 ## Usage
 
