@@ -53,6 +53,8 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
 
         self.token_lineEdit = self.findChild(QtGui.QLineEdit, 'token_lineEdit')  # QtGui.QLineEdit(self.apiKeyValue)
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
+        if self.get_token() and len(self.get_token()) > 0:
+            self.token_lineEdit.setText(self.get_token())
 
         self.p_list_widget = self.findChild(QtGui.QListWidget, 'projects_listWidget')  # QtGui.QListWidget()
         self.p_list_widget.itemClicked.connect(self.project_clicked)
@@ -81,9 +83,13 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
 
     def on_token_changed(self, token):
         self.settings.setValue('tokenValue', token)
+        self.amigo_api.set_token(token)
+        self.projects_list = self.amigo_api.fetch_project_list()
+        if len(self.projects_list) > 0:
+            os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
+            self.fill_project_list()
 
     def dataset_clicked(self, item):
-        print("Dataset clicked: ", str(item.text()), str(item.data(Qt.UserRole)))
         self.settings.setValue('datasetIdValue', str(item.data(Qt.UserRole)))
         self.settings.setValue('nameValue', str(item.text()))
 
@@ -97,7 +103,6 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
                 self.ds_list_widget.addItem(item)
 
     def project_clicked(self, item):
-        print("Project clicked: ", str(item.text()), str(item.data(Qt.UserRole)))
         self.fill_datasets_list(str(item.data(Qt.UserRole)))
         self.settings.setValue('projectIdValue', str(item.data(Qt.UserRole)))
 
