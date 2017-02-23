@@ -10,7 +10,7 @@
 name=AmigoCloud
 qgisMinimumVersion=2.0
 description=AmigoCloud
-version=0.2
+version=0.3
 author=AmigoCloud
 email=victor@amigocloud.com
 
@@ -32,7 +32,7 @@ homepage=http://plugins.qgis.org/plugins/qgis-amigocloud-plugin/
 category=Web
 icon=icon.png
 # experimental flag
-experimental=True
+# experimental=False
 
 # deprecated flag (applies to the whole plugin, not just a single version)
 deprecated=False
