@@ -60,10 +60,23 @@ class AmigoCloud(object):
         self._user_id = None
         self._project_id = None
         self._project_url = None
+        self._user_email = None
 
         # Auth
         if token:
             self.authenticate(token, project_url)
+
+    def get_user_id(self):
+        return self._user_id
+
+    def get_user_email(self):
+        if self._token and not self._user_email:
+            response = self.get('/me')
+            if 'email' in response:
+                self._user_email = response['email']
+            if 'id' in response:
+                self._user_id = response['id']
+        return str(self._user_email)
 
     def build_url(self, url):
         if url.startswith('http'):

@@ -10,7 +10,7 @@
 name=AmigoCloud
 qgisMinimumVersion=2.0
 description=AmigoCloud
-version=0.3
+version=0.4
 author=AmigoCloud
 email=victor@amigocloud.com
 

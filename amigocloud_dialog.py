@@ -62,6 +62,10 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
         self.fill_project_list()
         self.setFixedSize(800, 460)
 
+        self.amigo_api.send_analytics_event("User",
+                                        "Start (QGIS-plugin)",
+                                        self.amigo_api.ac.get_user_email())
+
     def get_name(self):
         return self.settings.value('nameValue')
 
@@ -107,6 +111,7 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
         self.settings.setValue('projectIdValue', str(item.data(Qt.UserRole)))
 
     def fill_project_list(self):
+        self.p_list_widget.clear()
         for project in self.projects_list:
             item = QtGui.QListWidgetItem(project['name'], self.p_list_widget)
             item.setData(Qt.UserRole, project['id'])
