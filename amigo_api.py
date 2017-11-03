@@ -27,7 +27,7 @@ class AmigoAPI:
             return []
 
     def fetch_dataset_list(self, project_id):
-        dataset_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets'
+        dataset_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets?summary'
         resp = self.ac.get(dataset_url)
         if 'results' in resp:
             return resp['results']
