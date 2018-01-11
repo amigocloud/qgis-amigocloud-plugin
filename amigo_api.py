@@ -2,7 +2,7 @@ import os
 import base64
 import requests
 import json
-from amigocloud import AmigoCloud
+from .amigocloud import AmigoCloud
 
 class AmigoAPI:
     def __init__(self):
@@ -13,11 +13,12 @@ class AmigoAPI:
         self.url = 'https://www.amigocloud.com'
         self.ac = AmigoCloud(token=self.token, base_url=self.url)
         self.mixpanel_token = self.fetch_mixpanel_token()
-        self.plugin_version = "0.4"
+        self.plugin_version = "0.7"
 
     def set_token(self, token):
         self.token = token
         self.ac = AmigoCloud(token=self.token, base_url=self.url)
+        self.mixpanel_token = self.fetch_mixpanel_token()
 
     def fetch_project_list(self):
         resp = self.ac.get(self.url + '/api/v1/me/projects?summary')
@@ -37,7 +38,10 @@ class AmigoAPI:
     def fetch_mixpanel_token(self):
         tracking_url = self.url + '/api/v1/utils/tracking/'
         resp = self.ac.get(tracking_url)
-        return resp['mixpanel_project_token']
+        if 'mixpanel_project_token' in resp:
+            return resp['mixpanel_project_token']
+        else:
+            return ""
 
     def send_analytics_event(self, category, action, label):
         email = self.ac.get_user_email().lower()
@@ -58,6 +62,6 @@ class AmigoAPI:
                 }
             }
             ejson = json.dumps(e)
-            e64 = base64.b64encode(ejson)
-            url = 'http://api.mixpanel.com/track/?data=' + e64
+            e64 = base64.b64encode(bytes(ejson, 'utf-8'))
+            url = 'http://api.mixpanel.com/track/?data=' + str(e64)
             requests.get(url)

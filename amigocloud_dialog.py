@@ -24,16 +24,17 @@
 import os
 import urllib
 
-from PyQt4 import QtGui, uic
-from PyQt4.QtCore import QSettings, Qt
+from PyQt5 import QtGui, uic
+from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem
 
-from amigo_api import AmigoAPI
+from .amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'amigocloud_dialog_base.ui'))
 
 
-class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
+class amigocloudDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(amigocloudDialog, self).__init__(parent)
@@ -43,20 +44,20 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
 
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
         self.setupUi(self)
-        self.p_list_widget = self.findChild(QtGui.QListWidget, 'projects_listWidget')  # QtGui.QListWidget()
+        self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
         self.p_list_widget.itemClicked.connect(self.project_clicked)
 
-        self.ds_list_widget = self.findChild(QtGui.QListWidget, 'datasets_listWidget')  # QtGui.QListWidget()
+        self.ds_list_widget = self.findChild(QListWidget, 'datasets_listWidget')
         self.ds_list_widget.itemClicked.connect(self.dataset_clicked)
 
         self.apiKeyValue = self.settings.value('apiKeyValue')
 
-        self.token_lineEdit = self.findChild(QtGui.QLineEdit, 'token_lineEdit')  # QtGui.QLineEdit(self.apiKeyValue)
+        self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
         if self.get_token() and len(self.get_token()) > 0:
             self.token_lineEdit.setText(self.get_token())
 
-        self.p_list_widget = self.findChild(QtGui.QListWidget, 'projects_listWidget')  # QtGui.QListWidget()
+        self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
         self.p_list_widget.itemClicked.connect(self.project_clicked)
 
         self.fill_project_list()
@@ -102,7 +103,7 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
         dataset_list = self.amigo_api.fetch_dataset_list(project_id)
         for dataset in dataset_list:
             if dataset['visible']:
-                item = QtGui.QListWidgetItem(dataset['name'], self.ds_list_widget)
+                item = QListWidgetItem(dataset['name'], self.ds_list_widget)
                 item.setData(Qt.UserRole, dataset['id'])
                 self.ds_list_widget.addItem(item)
 
@@ -113,7 +114,7 @@ class amigocloudDialog(QtGui.QDialog, FORM_CLASS):
     def fill_project_list(self):
         self.p_list_widget.clear()
         for project in self.projects_list:
-            item = QtGui.QListWidgetItem(project['name'], self.p_list_widget)
+            item = QListWidgetItem(project['name'], self.p_list_widget)
             item.setData(Qt.UserRole, project['id'])
             self.p_list_widget.addItem(item)
         return self.p_list_widget

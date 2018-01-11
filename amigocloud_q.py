@@ -20,14 +20,15 @@
  *                                                                         *
  ***************************************************************************/
 """
-from PyQt4.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
-from PyQt4.QtGui import QAction, QIcon
+from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QAction
 # Initialize Qt resources from file resources.py
 # import resources
 # Import the code for the dialog
-from amigocloud_dialog import amigocloudDialog
+from .amigocloud_dialog import amigocloudDialog
 import os.path
-from qgis.core import QgsVectorLayer, QgsMapLayerRegistry
+from qgis.core import QgsVectorLayer, QgsProject
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -197,7 +198,7 @@ class AmigoCloudQ:
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
                 vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
-                QgsMapLayerRegistry.instance().addMapLayer(vlayer)
+                QgsProject.instance().addMapLayer(vlayer)
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
