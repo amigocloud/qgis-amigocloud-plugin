@@ -37,7 +37,10 @@ class AmigoAPI:
     def fetch_mixpanel_token(self):
         tracking_url = self.url + '/api/v1/utils/tracking/'
         resp = self.ac.get(tracking_url)
-        return resp['mixpanel_project_token']
+        if 'mixpanel_project_token' in resp:
+            return resp['mixpanel_project_token']
+        else:
+            return ""
 
     def send_analytics_event(self, category, action, label):
         email = self.ac.get_user_email().lower()
