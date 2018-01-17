@@ -44,6 +44,8 @@ class AmigoAPI:
             return ""
 
     def send_analytics_event(self, category, action, label):
+        if not self.mixpanel_token:
+            return
         email = self.ac.get_user_email().lower()
         if email and "@" in email:
             e = {
@@ -64,4 +66,7 @@ class AmigoAPI:
             ejson = json.dumps(e)
             e64 = base64.b64encode(bytes(ejson, 'utf-8'))
             url = 'http://api.mixpanel.com/track/?data=' + str(e64)
-            requests.get(url)
+            try:
+                requests.get(url)
+            except Exception:
+                print(Exception)
