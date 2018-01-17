@@ -63,8 +63,8 @@ class AmigoAPI:
                 }
             }
             ejson = json.dumps(e)
-            e64 = base64.b64encode(ejson)
-            url = 'http://api.mixpanel.com/track/?data=' + e64
+            e64 = base64.b64encode(bytes(ejson, 'utf-8'))
+            url = 'http://api.mixpanel.com/track/?data=' + str(e64)
             try:
                 requests.get(url)
             except Exception:
