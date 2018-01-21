@@ -23,9 +23,11 @@
 
 import os
 import urllib
+import urllib.request
 
 from PyQt5 import QtGui, uic
-from PyQt5.QtCore import QSettings, Qt
+from PyQt5.QtCore import QSettings, Qt, QSize
+from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem
 
 from .amigo_api import AmigoAPI
@@ -41,7 +43,7 @@ class amigocloudDialog(QDialog, FORM_CLASS):
 
         self.amigo_api = AmigoAPI()
         self.projects_list = self.amigo_api.fetch_project_list()
-
+        self.iconSize = QSize(50,50)
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
         self.setupUi(self)
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
@@ -86,6 +88,21 @@ class amigocloudDialog(QDialog, FORM_CLASS):
         image.loadFromData(data)
         return image
 
+    # Makes a new QIcon based on a url that provides the image for the icon
+    def newIcon(self, url):
+        # Url that contains background image.
+        # It's completed with the necessary key to access the remote server
+        url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
+        # Reading of the url
+        data = urllib.request.urlopen(url).read()
+        # Pixmap object that will contain the image
+        pixmap = QPixmap()
+        # Now the pixmap contains the information from the url
+        pixmap.loadFromData(data)
+        # A new icon is created with the pixmap as its background image
+        icon = QIcon(pixmap)
+        return icon
+
     def on_token_changed(self, token):
         self.settings.setValue('tokenValue', token)
         self.amigo_api.set_token(token)
@@ -103,19 +120,31 @@ class amigocloudDialog(QDialog, FORM_CLASS):
         dataset_list = self.amigo_api.fetch_dataset_list(project_id)
         for dataset in dataset_list:
             if dataset['visible']:
+                url = dataset['preview_image']
                 item = QListWidgetItem(dataset['name'], self.ds_list_widget)
+                item.setIcon(self.newIcon(url))
                 item.setData(Qt.UserRole, dataset['id'])
                 self.ds_list_widget.addItem(item)
+                self.ds_list_widget.setIconSize(self.iconSize)
 
     def project_clicked(self, item):
         self.fill_datasets_list(str(item.data(Qt.UserRole)))
         self.settings.setValue('projectIdValue', str(item.data(Qt.UserRole)))
 
+
     def fill_project_list(self):
         self.p_list_widget.clear()
         for project in self.projects_list:
+            #The url with information of the preview image of the actual project
+            url = project['preview_image']
+            #Individual item of the project list. Contains the actual name of the project.
             item = QListWidgetItem(project['name'], self.p_list_widget)
+            #Now the item has also an icon with the project's preview image
+            item.setIcon(self.newIcon(url))
             item.setData(Qt.UserRole, project['id'])
+            #Adds the item to the list
             self.p_list_widget.addItem(item)
+            #Resizes the icon so it can be properly visualized
+            self.p_list_widget.setIconSize(self.iconSize)
         return self.p_list_widget
 
