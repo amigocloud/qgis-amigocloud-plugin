@@ -28,12 +28,14 @@ import urllib.request
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem
-
+from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
+from .ViewModel import ViewModel
 from .amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'amigocloud_dialog_base.ui'))
+
+vm = ViewModel()
 
 
 class amigocloudDialog(QDialog, FORM_CLASS):
@@ -43,7 +45,7 @@ class amigocloudDialog(QDialog, FORM_CLASS):
 
         self.amigo_api = AmigoAPI()
         self.projects_list = self.amigo_api.fetch_project_list()
-        self.iconSize = QSize(50,50)
+        self.iconSize = QSize(50, 50)
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
         self.setupUi(self)
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
@@ -52,7 +54,16 @@ class amigocloudDialog(QDialog, FORM_CLASS):
         self.ds_list_widget = self.findChild(QListWidget, 'datasets_listWidget')
         self.ds_list_widget.itemClicked.connect(self.dataset_clicked)
 
+        self.syncButton = QPushButton('Sync.',self)
+        self.syncButton.move(698,32)
+        self.syncButton.clicked.connect(self.sync)
+
+
+
         self.apiKeyValue = self.settings.value('apiKeyValue')
+
+        self.readAllFromLocal = []
+        self.i = 0
 
         self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
@@ -60,14 +71,20 @@ class amigocloudDialog(QDialog, FORM_CLASS):
             self.token_lineEdit.setText(self.get_token())
 
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
-        self.p_list_widget.itemClicked.connect(self.project_clicked)
 
-        self.fill_project_list()
         self.setFixedSize(800, 460)
 
         self.amigo_api.send_analytics_event("User",
-                                        "Start (QGIS-plugin)",
-                                        self.amigo_api.ac.get_user_email())
+                                            "Start (QGIS-plugin)",
+                                            self.amigo_api.ac.get_user_email())
+
+
+    def sync(self):
+        vm.devPrint("Synchronizing...")
+        self.projects_list = self.amigo_api.fetch_project_list()
+        if len(self.projects_list) > 0:
+            os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
+            self.fill_project_list()
 
     def get_name(self):
         return self.settings.value('nameValue')
@@ -81,6 +98,7 @@ class amigocloudDialog(QDialog, FORM_CLASS):
     def get_token(self):
         return self.settings.value('tokenValue')
 
+
     def load_image(self, url):
         url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         data = urllib.request.urlopen(url).read()
@@ -88,17 +106,12 @@ class amigocloudDialog(QDialog, FORM_CLASS):
         image.loadFromData(data)
         return image
 
-    # Makes a new QIcon based on a url that provides the image for the icon
-    def newIcon(self, url):
-        # Url that contains background image.
-        # It's completed with the necessary key to access the remote server
-        url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
-        # Reading of the url
-        data = urllib.request.urlopen(url).read()
+    # Makes a new QIcon based on a local image
+    def newIcon(self, pixmapContent):
         # Pixmap object that will contain the image
         pixmap = QPixmap()
-        # Now the pixmap contains the information from the url
-        pixmap.loadFromData(data)
+        # Now the pixmap contains the information from the image
+        pixmap.loadFromData(pixmapContent)
         # A new icon is created with the pixmap as its background image
         icon = QIcon(pixmap)
         return icon
@@ -111,40 +124,123 @@ class amigocloudDialog(QDialog, FORM_CLASS):
             os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
             self.fill_project_list()
 
-    def dataset_clicked(self, item):
-        self.settings.setValue('datasetIdValue', str(item.data(Qt.UserRole)))
-        self.settings.setValue('nameValue', str(item.text().encode('utf-8')))
-
-    def fill_datasets_list(self, project_id):
-        self.ds_list_widget.clear()
-        dataset_list = self.amigo_api.fetch_dataset_list(project_id)
-        for dataset in dataset_list:
-            if dataset['visible']:
-                url = dataset['preview_image']
-                item = QListWidgetItem(dataset['name'], self.ds_list_widget)
-                item.setIcon(self.newIcon(url))
-                item.setData(Qt.UserRole, dataset['id'])
-                self.ds_list_widget.addItem(item)
-                self.ds_list_widget.setIconSize(self.iconSize)
-
     def project_clicked(self, item):
         self.fill_datasets_list(str(item.data(Qt.UserRole)))
         self.settings.setValue('projectIdValue', str(item.data(Qt.UserRole)))
 
+    def dataset_clicked(self, item):
+        self.settings.setValue('datasetIdValue', str(item.data(Qt.UserRole)))
+        self.settings.setValue('nameValue', str(item.text().encode('utf-8')))
 
     def fill_project_list(self):
         self.p_list_widget.clear()
-        for project in self.projects_list:
-            #The url with information of the preview image of the actual project
-            url = project['preview_image']
-            #Individual item of the project list. Contains the actual name of the project.
-            item = QListWidgetItem(project['name'], self.p_list_widget)
-            #Now the item has also an icon with the project's preview image
-            item.setIcon(self.newIcon(url))
-            item.setData(Qt.UserRole, project['id'])
-            #Adds the item to the list
+        remoteUrls = []
+        for p_iterator, project in enumerate(self.projects_list):
+            p_url = project['url']
+            p_hash = project['hash']
+
+            remoteUrls.append(p_url)
+
+            # Checks if there is a new project on the remote server
+            if vm.verifyProjectExists(p_url):
+                # Check if the project's hash has changed. If not, just load everything from local
+                if vm.verifyProjectHashChanged(p_hash):
+                    vm.setProjectUpdated(p_url,0)
+                    p_name = project['name']
+                    p_img_hash = project['preview_image_hash']
+                    if(vm.verifyProjectImageHashChanged(p_img_hash)):
+                        p_img_url = project['preview_image']
+                        vm.updateProjectAll(p_url, p_hash, p_name, p_img_url, p_img_hash)
+                        vm.devPrint("Updating all from project [" + p_name + "]")
+                    else:
+                        vm.updateProjectName(p_url, p_hash, p_name)
+                        vm.devPrint("Renaming project to: [" + p_name + "]")
+                else:
+                    # Read all from this project from local
+                    vm.setProjectUpdated(p_url,1)
+                    vm.devPrint("Project is updated")
+            else:
+                p_id = project['id']
+                p_name = project['name']
+                p_img_url = project['preview_image']
+                p_img_hash = project['preview_image_hash']
+                p_updated = 0
+
+                vm.insertNewProject(p_url, p_id, p_name, p_hash, p_img_url, p_img_hash, p_updated)
+                vm.devPrint("New project found: [" + p_name + "]. Inserting to local DB...")
+
+            projectFromLocal = vm.loadFromProjects(p_url)
+            # "fl" = from local
+            fl_p_id = projectFromLocal[1]
+            fl_p_name = projectFromLocal[2]
+            fl_p_img = projectFromLocal[4]
+
+            vm.devPrint("Reading project [" + fl_p_name + "] from local..." + "\n")
+
+            # Individual item of the project list. Contains the actual name of the project.
+            item = QListWidgetItem(fl_p_name, self.p_list_widget)
+            # Now the item has also an icon with the project's preview image
+            item.setIcon(self.newIcon(fl_p_img))
+            item.setData(Qt.UserRole, fl_p_id)
+            # Adds the item to the list
             self.p_list_widget.addItem(item)
-            #Resizes the icon so it can be properly visualized
+            # Resizes the icon so it can be properly visualized
             self.p_list_widget.setIconSize(self.iconSize)
+
+        localUrls = vm.loadAllUrlsFromProjectsLocal()
+        vm.projectTrashcan(remoteUrls,localUrls)
         return self.p_list_widget
 
+    def fill_datasets_list(self, project_id):
+        self.ds_list_widget.clear()
+        dataset_list = self.amigo_api.fetch_dataset_list(project_id)
+        ds_p_url_toUpdate = None
+        remoteUrls = []
+        for dataset in dataset_list:
+            if dataset['visible']:
+                ds_url = dataset['url']
+                ds_hash = dataset['hash']
+                ds_p_url = dataset['project']
+
+                ds_p_url_toUpdate = ds_p_url
+                remoteUrls.append(ds_url)
+                #Check if there's a new dataset on remote
+                if vm.verifyDatasetExists(ds_url):
+                    if vm.checkProjectUpdated(ds_p_url) == 0:
+                        if vm.verifyDatasetHashChanged(ds_hash):
+                            ds_name = dataset['name']
+                            ds_img_hash = dataset['preview_image_hash']
+                            if (vm.verifyDatasetImageHashChanged(ds_img_hash)):
+                                ds_img_url = dataset['preview_image']
+                                vm.updateDatasetAll(ds_url, ds_hash, ds_name, ds_img_url, ds_img_hash)
+                                vm.devPrint("Updating all from dataset [" + ds_name + "]")
+                            else:
+                                vm.updateProjectName(ds_url, ds_hash, ds_name)
+                                vm.devPrint("Renaming dataset to: [" + ds_name + "]")
+                    else:
+                        vm.devPrint("The project is up to date. Loading all from local")
+                else:
+                    ds_id = dataset['id']
+                    ds_name = dataset['name']
+                    ds_img_url = dataset['preview_image']
+                    ds_img_hash = dataset['preview_image_hash']
+
+                    vm.insertNewDataset(ds_p_url,ds_url,ds_id,ds_name,ds_hash,ds_img_url,ds_img_hash)
+                    vm.devPrint("New dataset found: [" + ds_name + "]. Inserting to local DB...")
+
+                datasetFromLocal = vm.loadFromDatasets(ds_url)
+
+                # "fl" = from local
+                fl_ds_id = datasetFromLocal[2]
+                fl_ds_name = datasetFromLocal[3]
+                fl_ds_img = datasetFromLocal[5]
+
+                item = QListWidgetItem(fl_ds_name, self.ds_list_widget)
+                item.setIcon(self.newIcon(fl_ds_img))
+                item.setData(Qt.UserRole, fl_ds_id)
+                self.ds_list_widget.addItem(item)
+                self.ds_list_widget.setIconSize(self.iconSize)
+
+        localUrls = vm.loadAllUrlsFromDatasetsLocal(ds_p_url_toUpdate)
+        vm.datasetTrashcan(remoteUrls, localUrls)
+        vm.setProjectUpdated(ds_p_url_toUpdate,1)

@@ -20,6 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -29,6 +30,8 @@ from PyQt5.QtWidgets import QAction
 from .amigocloud_dialog import amigocloudDialog
 import os.path
 from qgis.core import QgsVectorLayer, QgsProject
+from .ViewModel import ViewModel
+
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -51,6 +54,9 @@ class AmigoCloudQ:
             self.plugin_dir,
             'i18n',
             'amigocloud_{}.qm'.format(locale))
+
+        #DatabaseManager instance
+        self.dbm = ViewModel()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -162,6 +168,7 @@ class AmigoCloudQ:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/amigocloud/icon.png'
+        # icon_path = './rcat.jpg'
         self.add_action(
             icon_path,
             text=self.tr(u'AmigoCloud'),
@@ -182,6 +189,7 @@ class AmigoCloudQ:
 
     def run(self):
         """Run method that performs all the real work"""
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop

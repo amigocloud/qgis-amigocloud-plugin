@@ -30,7 +30,7 @@ tags=webservice, web, wfs, wms, gis
 
 homepage=http://plugins.qgis.org/plugins/qgis-amigocloud-plugin/
 category=Web
-icon=icon.png
+icon=img/icon.png
 # experimental flag
 # experimental=False
 

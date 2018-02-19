@@ -3,6 +3,7 @@ import base64
 import requests
 import json
 from .amigocloud import AmigoCloud
+import sqlite3
 
 class AmigoAPI:
     def __init__(self):
@@ -28,7 +29,7 @@ class AmigoAPI:
             return []
 
     def fetch_dataset_list(self, project_id):
-        dataset_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets?summary'
+        dataset_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets'
         resp = self.ac.get(dataset_url)
         if 'results' in resp:
             return resp['results']
