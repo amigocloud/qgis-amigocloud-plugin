@@ -28,9 +28,11 @@ from PyQt5.QtWidgets import QAction
 # import resources
 # Import the code for the dialog
 from .amigocloud_dialog import amigocloudDialog
+from .amigo_api import AmigoAPI
 import os.path
 from qgis.core import QgsVectorLayer, QgsProject
-from .ViewModel import ViewModel
+from .DSRelManager import DSRelManager
+
 
 
 class AmigoCloudQ:
@@ -55,8 +57,8 @@ class AmigoCloudQ:
             'i18n',
             'amigocloud_{}.qm'.format(locale))
 
-        #DatabaseManager instance
-        self.dbm = ViewModel()
+        #Api instance
+        self.api = AmigoAPI()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -206,7 +208,12 @@ class AmigoCloudQ:
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
                 vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
+
                 QgsProject.instance().addMapLayer(vlayer)
+
+                relManager = DSRelManager()
+                relations = relManager.getRelations()
+                relManager.manageRelations(relations)
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",

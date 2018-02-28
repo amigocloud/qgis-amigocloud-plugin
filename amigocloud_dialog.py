@@ -29,14 +29,14 @@ from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
-from .ViewModel import ViewModel
+from .CacheManager import CacheManager
 from .amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'amigocloud_dialog_base.ui'))
 
-vm = ViewModel()
-
+cm = CacheManager()
+cm.initializeDB()
 
 class amigocloudDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
@@ -63,7 +63,7 @@ class amigocloudDialog(QDialog, FORM_CLASS):
         self.apiKeyValue = self.settings.value('apiKeyValue')
 
         self.readAllFromLocal = []
-        self.i = 0
+
 
         self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
@@ -80,7 +80,7 @@ class amigocloudDialog(QDialog, FORM_CLASS):
 
 
     def sync(self):
-        vm.devPrint("Synchronizing...")
+        cm.devPrint("Synchronizing...")
         self.projects_list = self.amigo_api.fetch_project_list()
         if len(self.projects_list) > 0:
             os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
@@ -142,23 +142,23 @@ class amigocloudDialog(QDialog, FORM_CLASS):
             remoteUrls.append(p_url)
 
             # Checks if there is a new project on the remote server
-            if vm.verifyProjectExists(p_url):
+            if cm.verifyProjectExists(p_url):
                 # Check if the project's hash has changed. If not, just load everything from local
-                if vm.verifyProjectHashChanged(p_hash):
-                    vm.setProjectUpdated(p_url,0)
+                if cm.verifyProjectHashChanged(p_hash):
+                    cm.setProjectUpdated(p_url, 0)
                     p_name = project['name']
                     p_img_hash = project['preview_image_hash']
-                    if(vm.verifyProjectImageHashChanged(p_img_hash)):
+                    if(cm.verifyProjectImageHashChanged(p_img_hash)):
                         p_img_url = project['preview_image']
-                        vm.updateProjectAll(p_url, p_hash, p_name, p_img_url, p_img_hash)
-                        vm.devPrint("Updating all from project [" + p_name + "]")
+                        cm.updateProjectAll(p_url, p_hash, p_name, p_img_url, p_img_hash)
+                        cm.devPrint("Updating all from project [" + p_name + "]")
                     else:
-                        vm.updateProjectName(p_url, p_hash, p_name)
-                        vm.devPrint("Renaming project to: [" + p_name + "]")
+                        cm.updateProjectName(p_url, p_hash, p_name)
+                        cm.devPrint("Renaming project to: [" + p_name + "]")
                 else:
                     # Read all from this project from local
-                    vm.setProjectUpdated(p_url,1)
-                    vm.devPrint("Project is updated")
+                    cm.setProjectUpdated(p_url, 1)
+                    cm.devPrint("Project is updated")
             else:
                 p_id = project['id']
                 p_name = project['name']
@@ -166,16 +166,16 @@ class amigocloudDialog(QDialog, FORM_CLASS):
                 p_img_hash = project['preview_image_hash']
                 p_updated = 0
 
-                vm.insertNewProject(p_url, p_id, p_name, p_hash, p_img_url, p_img_hash, p_updated)
-                vm.devPrint("New project found: [" + p_name + "]. Inserting to local DB...")
+                cm.insertNewProject(p_url, p_id, p_name, p_hash, p_img_url, p_img_hash, p_updated)
+                cm.devPrint("New project found: [" + p_name + "]. Inserting to local DB...")
 
-            projectFromLocal = vm.loadFromProjects(p_url)
+            projectFromLocal = cm.loadFromProjects(p_url)
             # "fl" = from local
             fl_p_id = projectFromLocal[1]
             fl_p_name = projectFromLocal[2]
             fl_p_img = projectFromLocal[4]
 
-            vm.devPrint("Reading project [" + fl_p_name + "] from local..." + "\n")
+            cm.devPrint("Reading project [" + fl_p_name + "] from local..." + "\n")
 
             # Individual item of the project list. Contains the actual name of the project.
             item = QListWidgetItem(fl_p_name, self.p_list_widget)
@@ -187,8 +187,8 @@ class amigocloudDialog(QDialog, FORM_CLASS):
             # Resizes the icon so it can be properly visualized
             self.p_list_widget.setIconSize(self.iconSize)
 
-        localUrls = vm.loadAllUrlsFromProjectsLocal()
-        vm.projectTrashcan(remoteUrls,localUrls)
+        localUrls = cm.loadAllUrlsFromProjectsLocal()
+        cm.projectTrashcan(remoteUrls, localUrls)
         return self.p_list_widget
 
     def fill_datasets_list(self, project_id):
@@ -204,31 +204,31 @@ class amigocloudDialog(QDialog, FORM_CLASS):
 
                 ds_p_url_toUpdate = ds_p_url
                 remoteUrls.append(ds_url)
-                #Check if there's a new dataset on remote
-                if vm.verifyDatasetExists(ds_url):
-                    if vm.checkProjectUpdated(ds_p_url) == 0:
-                        if vm.verifyDatasetHashChanged(ds_hash):
+                # Check if there's a new dataset on remote
+                if cm.verifyDatasetExists(ds_url):
+                    if cm.checkProjectUpdated(ds_p_url) == 0:   # If the project is not updated, download accordingly
+                        if cm.verifyDatasetHashChanged(ds_hash): # If the hash has changed...
                             ds_name = dataset['name']
                             ds_img_hash = dataset['preview_image_hash']
-                            if (vm.verifyDatasetImageHashChanged(ds_img_hash)):
+                            if cm.verifyDatasetImageHashChanged(ds_img_hash):
                                 ds_img_url = dataset['preview_image']
-                                vm.updateDatasetAll(ds_url, ds_hash, ds_name, ds_img_url, ds_img_hash)
-                                vm.devPrint("Updating all from dataset [" + ds_name + "]")
+                                cm.updateDatasetAll(ds_url, ds_hash, ds_name, ds_img_url, ds_img_hash)
+                                cm.devPrint("Updating all from dataset [" + ds_name + "]")
                             else:
-                                vm.updateProjectName(ds_url, ds_hash, ds_name)
-                                vm.devPrint("Renaming dataset to: [" + ds_name + "]")
+                                cm.updateProjectName(ds_url, ds_hash, ds_name)
+                                cm.devPrint("Renaming dataset to: [" + ds_name + "]")
                     else:
-                        vm.devPrint("The project is up to date. Loading all from local")
+                        cm.devPrint("The project is up to date. Loading all from local")
                 else:
                     ds_id = dataset['id']
                     ds_name = dataset['name']
                     ds_img_url = dataset['preview_image']
                     ds_img_hash = dataset['preview_image_hash']
 
-                    vm.insertNewDataset(ds_p_url,ds_url,ds_id,ds_name,ds_hash,ds_img_url,ds_img_hash)
-                    vm.devPrint("New dataset found: [" + ds_name + "]. Inserting to local DB...")
+                    cm.insertNewDataset(ds_p_url, ds_url, ds_id, ds_name, ds_hash, ds_img_url, ds_img_hash)
+                    cm.devPrint("New dataset found: [" + ds_name + "]. Inserting to local DB...")
 
-                datasetFromLocal = vm.loadFromDatasets(ds_url)
+                datasetFromLocal = cm.loadFromDatasets(ds_url)
 
                 # "fl" = from local
                 fl_ds_id = datasetFromLocal[2]
@@ -241,6 +241,6 @@ class amigocloudDialog(QDialog, FORM_CLASS):
                 self.ds_list_widget.addItem(item)
                 self.ds_list_widget.setIconSize(self.iconSize)
 
-        localUrls = vm.loadAllUrlsFromDatasetsLocal(ds_p_url_toUpdate)
-        vm.datasetTrashcan(remoteUrls, localUrls)
-        vm.setProjectUpdated(ds_p_url_toUpdate,1)
+        localUrls = cm.loadAllUrlsFromDatasetsLocal(ds_p_url_toUpdate)
+        cm.datasetTrashcan(remoteUrls, localUrls) # Deletes the datasets on the cache that are no longer on remote
+        cm.setProjectUpdated(ds_p_url_toUpdate, 1)  # Sets the parent project as updated

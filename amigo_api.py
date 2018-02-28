@@ -36,6 +36,15 @@ class AmigoAPI:
         else:
             return []
 
+    def fetch_dataset_relations(self, project_id, dataset_id):  # Queries the relationships of a dataset
+        relations_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets/' + dataset_id + '/relationships/'
+        print(relations_url)
+        resp = self.ac.get(relations_url)
+        if 'results' in resp:
+            return resp['results']
+        else:
+            return []
+
     def fetch_mixpanel_token(self):
         tracking_url = self.url + '/api/v1/utils/tracking/'
         resp = self.ac.get(tracking_url)
