@@ -3,6 +3,10 @@ import tempfile
 import os
 import urllib.request
 
+'''
+    This class manages local cache
+'''
+
 class CacheManager():
     def __init__(self):
         self.tempDir = tempfile.gettempdir()
