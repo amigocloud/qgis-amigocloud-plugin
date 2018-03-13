@@ -30,9 +30,9 @@ from PyQt5.QtWidgets import QAction
 from .amigocloud_dialog import amigocloudDialog
 from .amigo_api import AmigoAPI
 import os.path
-from qgis.core import QgsVectorLayer, QgsProject
 from .DSRelManager import DSRelManager
-
+from .QGISManager import QGISManager
+from .PicklistManager import PicklistManager
 
 
 class AmigoCloudQ:
@@ -59,6 +59,7 @@ class AmigoCloudQ:
 
         #Api instance
         self.api = AmigoAPI()
+        self.qgm = QGISManager()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -207,13 +208,15 @@ class AmigoCloudQ:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + " API_KEY=" + self.dlg.get_token()
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
-                vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
 
-                QgsProject.instance().addMapLayer(vlayer)
+                self.qgm.addLayer(uri,self.dlg.get_name())
 
                 relManager = DSRelManager()
-                relations = relManager.getRelations()
-                relManager.manageRelations(relations)
+                relations = self.api.fetch_dataset_relations(self.dlg.get_project_id(),self.dlg.get_dataset_id())
+                relManager.relate(relations)
+
+                pkManager = PicklistManager()
+                pkManager.managePicklists(self.dlg.get_name(),self.dlg.get_project_id(),self.dlg.get_dataset_id())
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",

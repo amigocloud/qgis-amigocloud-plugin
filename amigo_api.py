@@ -38,10 +38,17 @@ class AmigoAPI:
 
     def fetch_dataset_relations(self, project_id, dataset_id):  # Queries the relationships of a dataset
         relations_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets/' + dataset_id + '/relationships/'
-        print(relations_url)
         resp = self.ac.get(relations_url)
         if 'results' in resp:
             return resp['results']
+        else:
+            return []
+
+    def fetch_dataset_schema(self,project_id,dataset_id):
+        relations_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets/' + dataset_id + '/schema/'
+        resp = self.ac.get(relations_url)
+        if 'schema' in resp:
+            return resp['schema']
         else:
             return []
 
