@@ -20,6 +20,7 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
@@ -27,8 +28,12 @@ from PyQt5.QtWidgets import QAction
 # import resources
 # Import the code for the dialog
 from .amigocloud_dialog import amigocloudDialog
+from .amigo_api import AmigoAPI
 import os.path
-from qgis.core import QgsVectorLayer, QgsProject
+from .DSRelManager import DSRelManager
+from .QGISManager import QGISManager
+from .PicklistManager import PicklistManager
+
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -51,6 +56,10 @@ class AmigoCloudQ:
             self.plugin_dir,
             'i18n',
             'amigocloud_{}.qm'.format(locale))
+
+        #Api instance
+        self.api = AmigoAPI()
+        self.qgm = QGISManager()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -162,6 +171,7 @@ class AmigoCloudQ:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/amigocloud/icon.png'
+        # icon_path = './rcat.jpg'
         self.add_action(
             icon_path,
             text=self.tr(u'AmigoCloud'),
@@ -182,6 +192,7 @@ class AmigoCloudQ:
 
     def run(self):
         """Run method that performs all the real work"""
+
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
@@ -197,8 +208,15 @@ class AmigoCloudQ:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + " API_KEY=" + self.dlg.get_token()
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
-                vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
-                QgsProject.instance().addMapLayer(vlayer)
+
+                self.qgm.addLayer(uri,self.dlg.get_name())
+
+                relManager = DSRelManager()
+                relations = self.api.fetch_dataset_relations(self.dlg.get_project_id(),self.dlg.get_dataset_id())
+                relManager.relate(relations)
+
+                pkManager = PicklistManager()
+                pkManager.managePicklists(self.dlg.get_name(),self.dlg.get_project_id(),self.dlg.get_dataset_id())
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
