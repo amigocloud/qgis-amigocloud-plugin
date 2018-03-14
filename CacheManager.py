@@ -98,7 +98,7 @@ class CacheManager():
         p_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(p_img_url).read()
         new_values = (p_url,p_id,p_hash,img_data)
-        c.execute("INSERT OR IGNORE INTO projects VALUES (?,?,?,?)", new_values)
+        c.execute("INSERT OR REPLACE INTO projects VALUES (?,?,?,?)", new_values)
         conn.commit()
         self.close_conn(c)
 
@@ -109,7 +109,7 @@ class CacheManager():
         ds_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(ds_img_url).read()
         new_values = (ds_url, ds_p_url, ds_id, ds_hash, img_data)
-        c.execute("INSERT OR IGNORE INTO datasets VALUES (?,?,?,?,?)", new_values)
+        c.execute("INSERT OR REPLACE INTO datasets VALUES (?,?,?,?,?)", new_values)
         conn.commit()
         self.close_conn(c)
 
