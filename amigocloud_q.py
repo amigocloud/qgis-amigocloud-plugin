@@ -217,7 +217,7 @@ class AmigoCloudQ:
                 pk_manager = PicklistManager()
                 pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
 
-                self.dlg.cm.close_conn()
+                self.dlg.cm.close_db()
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",

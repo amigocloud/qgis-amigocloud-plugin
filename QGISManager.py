@@ -33,12 +33,6 @@ class QGISManager:
         else:
             print('Relation failed </3')
 
-    def format_choices(self, dictionary):
-        r = {}
-        for elem in dictionary:
-            r[elem['value']] = elem['code']
-        return r
-
     def add_value_map(self, layer_name, field_name, dict_choices):
         try:
             layers = QgsProject.instance().mapLayersByName(layer_name)

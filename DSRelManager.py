@@ -16,11 +16,18 @@ class DSRelManager:
 
                 relation_id = str(r['id'])
 
-                child_layers = self.qgm.get_layer_by_name(child_name)
-                parent_layers = self.qgm.get_layer_by_name(parent_name)
+                try:
+                    child_layers = self.qgm.get_layer_by_name(child_name)
+                    parent_layers = self.qgm.get_layer_by_name(parent_name)
+                except:
+                    child_layers = []
+                    parent_layers = []
 
                 if child_layers and parent_layers:  # If both layers exist
                     for child_layer, parent_layer in zip(child_layers, parent_layers):
                         self.qgm.make_relation(child_layer, parent_layer, foreign_key, primary_key, relation_id)
+
                 else:
                     print('At least two layers are required to make a relationship. Please add another one.')
+
+

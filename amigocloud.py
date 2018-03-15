@@ -4,7 +4,9 @@ import os
 
 import requests
 from six import string_types
+
 # from six.moves.urllib.parse import urlparse, urlunparse, parse_q
+
 from urllib import parse
 # from socketIO_client import SocketIO, BaseNamespace
 
@@ -89,8 +91,7 @@ class AmigoCloud(object):
         return '/'.join(
             s.strip('/') for s in (self._project_url or self.api_url, url))
 
-    @staticmethod
-    def check_for_errors(response):
+    def check_for_errors(self, response):
         try:
             response.raise_for_status()
         except requests.exceptions.HTTPError as exc:
