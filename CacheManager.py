@@ -7,7 +7,8 @@ import urllib.request
     This class manages local cache
 '''
 
-class CacheManager():
+
+class CacheManager:
     def __init__(self):
         self.temp_dir = tempfile.gettempdir()
         self.db_name = "amigocloud_local_db.db"
@@ -45,13 +46,13 @@ class CacheManager():
             conn.commit()
             self.close_conn(c)
             self.dev_print("Success when initializing tables for images")
-        except Exception:
+        except sqlite3.Error:
             self.dev_print("Something failed when initializing tables for images")
 
-    def verify_existence(self, table, columnName, columnToVerify):
+    def verify_existence(self, table, column_name, column_to_verify):
         conn = self.open_conn()
         c = conn.cursor()
-        c.execute("SELECT * FROM " + table + " WHERE "+ columnName + "=? LIMIT 1", (columnToVerify,))
+        c.execute("SELECT * FROM " + table + " WHERE " + column_name + "=? LIMIT 1", (column_to_verify,))
         exists = c.fetchone() is not None
         self.close_conn(c)
         return exists
@@ -78,7 +79,7 @@ class CacheManager():
         conn = self.open_conn()
         c = conn.cursor()
 
-        c.execute("UPDATE projects SET p_updated = ? WHERE p_url = ?",(p_updated,p_url))
+        c.execute("UPDATE projects SET p_updated = ? WHERE p_url = ?", (p_updated, p_url))
         conn.commit()
         self.close_conn(c)
 
@@ -86,7 +87,7 @@ class CacheManager():
         conn = self.open_conn()
         c = conn.cursor()
         r = None
-        for project in c.execute("SELECT * FROM projects WHERE p_url = ? LIMIT 1",(ds_p_url,)):
+        for project in c.execute("SELECT * FROM projects WHERE p_url = ? LIMIT 1", (ds_p_url,)):
             r = project[6]
         self.close_conn(c)
         return r
@@ -97,7 +98,7 @@ class CacheManager():
 
         p_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(p_img_url).read()
-        new_values = (p_url,p_id,p_hash,img_data)
+        new_values = (p_url, p_id, p_hash, img_data)
         c.execute("INSERT OR REPLACE INTO projects VALUES (?,?,?,?)", new_values)
         conn.commit()
         self.close_conn(c)
@@ -196,7 +197,7 @@ class CacheManager():
         c = conn.cursor()
         ds_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(ds_img_url).read()
-        updated_values = (ds_name,ds_hash, img_data,ds_img_hash,ds_url)
+        updated_values = (ds_name, ds_hash, img_data, ds_img_hash, ds_url)
         c.execute(
             "UPDATE datasets SET ds_name = ?, ds_hash = ?,ds_image = ?, ds_img_hash = ? WHERE ds_url = ?",
             updated_values)
@@ -217,7 +218,7 @@ class CacheManager():
         c = conn.cursor()
         updated_values = (ds_name, ds_hash, ds_url)
 
-        c.execute("UPDATE datasets SET ds_name = ?, ds_hash = ?, WHERE ds_url = ?",updated_values)
+        c.execute("UPDATE datasets SET ds_name = ?, ds_hash = ?, WHERE ds_url = ?", updated_values)
         conn.commit()
         self.close_conn(c)
 

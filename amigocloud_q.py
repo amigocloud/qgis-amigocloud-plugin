@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import QAction
 # Initialize Qt resources from file resources.py
 # import resources
 # Import the code for the dialog
-from .amigocloud_dialog import amigocloudDialog
+from .amigocloud_dialog import AmigoCloudDialog
 from .amigo_api import AmigoAPI
 import os.path
 from .DSRelManager import DSRelManager
@@ -57,7 +57,7 @@ class AmigoCloudQ:
             'i18n',
             'amigocloud_{}.qm'.format(locale))
 
-        #Api instance
+        # Api instance
         self.api = AmigoAPI()
         self.qgm = QGISManager()
 
@@ -66,10 +66,11 @@ class AmigoCloudQ:
             self.translator.load(locale_path)
 
             if qVersion() > '4.3.3':
+                # TODO: Fix this problem below. The function is expecting something else.
                 QCoreApplication.installTranslator(self.translator)
 
         # Create the dialog (after translation) and keep reference
-        self.dlg = amigocloudDialog()
+        self.dlg = AmigoCloudDialog()
 
         # Declare instance attributes
         self.actions = []
@@ -92,7 +93,6 @@ class AmigoCloudQ:
         """
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('AmigoCloud', message)
-
 
     def add_action(
         self,
@@ -167,7 +167,7 @@ class AmigoCloudQ:
 
         return action
 
-    def initGui(self):
+    def init_gui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/amigocloud/icon.png'
@@ -178,7 +178,6 @@ class AmigoCloudQ:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -188,7 +187,6 @@ class AmigoCloudQ:
             self.iface.removeToolBarIcon(action)
         # remove the toolbar
         del self.toolbar
-
 
     def run(self):
         """Run method that performs all the real work"""
@@ -203,22 +201,22 @@ class AmigoCloudQ:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Added (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
-                uri = ''
+
                 if len(self.dlg.get_token()) > 0:
-                    uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + " API_KEY=" + self.dlg.get_token()
+                    uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + \
+                          " API_KEY=" + self.dlg.get_token()
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
 
-                self.qgm.addLayer(uri,self.dlg.get_name())
+                self.qgm.add_layer(uri, self.dlg.get_name())
 
-                relManager = DSRelManager()
-                relations = self.api.fetch_dataset_relations(self.dlg.get_project_id(),self.dlg.get_dataset_id())
-                relManager.relate(relations)
+                rel_manager = DSRelManager()
+                relations = self.api.fetch_dataset_relations(self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                rel_manager.relate(relations)
 
-                pkManager = PicklistManager()
-                pkManager.managePicklists(self.dlg.get_name(),self.dlg.get_project_id(),self.dlg.get_dataset_id())
+                pk_manager = PicklistManager()
+                pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
-

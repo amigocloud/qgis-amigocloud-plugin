@@ -4,17 +4,19 @@ from qgis._core import QgsRelation
 from qgis._core import QgsVectorLayer
 from .amigo_api import AmigoAPI
 
-api = AmigoAPI()
 
-class QGISManager():
-    def addLayer(self,uri,name):
-        vlayer = QgsVectorLayer(uri, name, "ogr")
-        QgsProject.instance().addMapLayer(vlayer)
+class QGISManager:
+    def __init__(self):
+        self.api = AmigoAPI()
 
-    def getLayerByName(self, name):
+    def add_layer(self, uri, name):
+        v_layer = QgsVectorLayer(uri, name, "ogr")
+        QgsProject.instance().addMapLayer(v_layer)
+
+    def get_layer_by_name(self, name):
         return QgsProject.instance().mapLayersByName('b\'' + name + '\'')
 
-    def makeRelation(self,child_layer, parent_layer, foreign_key, primary_key, relation_id):
+    def make_relation(self, child_layer, parent_layer, foreign_key, primary_key, relation_id):
         relation_name = 'from_' + child_layer.name() + '_to_' + parent_layer.name()
         # Setting up the relation
         rel = QgsRelation()
@@ -31,27 +33,26 @@ class QGISManager():
         else:
             print('Relation failed </3')
 
-
-    def formatChoices(self, dict):
+    def format_choices(self, dictionary):
         r = {}
-        for elem in dict:
+        for elem in dictionary:
             r[elem['value']] = elem['code']
         return r
 
-    def addValueMap(self, layer_name, field_name, dict_choices):
+    def add_value_map(self, layer_name, field_name, dict_choices):
         try:
             layers = QgsProject.instance().mapLayersByName(layer_name)
             if layers and dict_choices:
                 for layer in layers:
-                    fieldIndex = layer.fields().indexFromName(field_name)
+                    field_index = layer.fields().indexFromName(field_name)
                     editor_widget_setup = QgsEditorWidgetSetup('ValueMap', {
                         'map': dict_choices
                     }
                                                                )
-                    layer.setEditorWidgetSetup(fieldIndex, editor_widget_setup)
+                    layer.setEditorWidgetSetup(field_index, editor_widget_setup)
                     print('ValueMap added')
             else:
-                print('Layer or choices doesn\'t exist')
+                print("Layer or choices don't exist")
                 return
         except Exception:
             print('Exception raised')
