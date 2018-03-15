@@ -4,7 +4,8 @@ import os
 
 import requests
 from six import string_types
-from six.moves.urllib.parse import urlparse, urlunparse, parse_q
+# from six.moves.urllib.parse import urlparse, urlunparse, parse_q
+from urllib import parse
 # from socketIO_client import SocketIO, BaseNamespace
 
 # Disable useless warnings
@@ -143,13 +144,13 @@ class AmigoCloud(object):
 
         # Add token (if it's not already there)
         if self._token:
-            parsed = list(urlparse(full_url))
+            parsed = list(parse.urlparse(full_url))
             if not parsed[4]:  # query
                 parsed[4] = 'token=%s' % self._token
-                full_url = urlunparse(parsed)
-            elif 'token' not in parse_qs(parsed[4]):
+                full_url = parse.urlunparse(parsed)
+            elif 'token' not in parse.parse_qs(parsed[4]):
                 parsed[4] += '&token=%s' % self._token
-                full_url = urlunparse(parsed)
+                full_url = parse.urlunparse(parsed)
         headers = headers or {}
 
         # If files are being sent, we cannot encode data as JSON

@@ -133,11 +133,11 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         self.p_list_widget.clear()
         remote_urls = []
         for project in self.projects_list:
-            p_url = project['url']
-            p_id = project['id']
+            p_url = project["url"]
+            p_id = project["id"]
             p_name = project["name"]
-            p_hash = project['hash']
-            p_img_url = project['preview_image']
+            p_hash = project["hash"]
+            p_img_url = project["preview_image"]
             remote_urls.append(p_url)
 
             # Checks if there is a new project on the remote server
@@ -171,13 +171,14 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         remote_urls = []
         ds_p_url = None
         for dataset in dataset_list:
-            if dataset['visible']:
-                ds_id = dataset['id']
-                ds_url = dataset['url']
-                ds_p_url = dataset['project']
-                ds_name = dataset['name']
-                ds_hash = dataset['hash']
-                ds_img_url = dataset['preview_image']
+            if dataset["visible"]:
+                ds_id = dataset["id"]
+                ds_url = dataset["url"]
+                # TODO: Fix this
+                ds_p_url = ''
+                ds_name = dataset["name"]
+                ds_hash = dataset["hash"]
+                ds_img_url = dataset["preview_image"]
 
                 # Checks if there is a new project on the remote server
                 if self.cm.verify_dataset_exists(ds_url):

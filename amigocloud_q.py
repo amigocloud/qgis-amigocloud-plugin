@@ -167,11 +167,11 @@ class AmigoCloudQ:
 
         return action
 
-    def init_gui(self):
+    def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/amigocloud/icon.png'
-        # icon_path = './rcat.jpg'
+
         self.add_action(
             icon_path,
             text=self.tr(u'AmigoCloud'),
@@ -216,6 +216,8 @@ class AmigoCloudQ:
 
                 pk_manager = PicklistManager()
                 pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
+
+                self.dlg.cm.close_conn()
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
