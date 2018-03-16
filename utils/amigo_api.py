@@ -1,7 +1,9 @@
-import os
 import base64
-import requests
 import json
+import os
+
+import requests
+
 from .amigocloud import AmigoCloud
 
 
@@ -44,7 +46,7 @@ class AmigoAPI:
         else:
             return []
 
-    def fetch_dataset_schema(self,project_id,dataset_id):
+    def fetch_dataset_schema(self, project_id, dataset_id):
         relations_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets/' + dataset_id + '/schema/'
         resp = self.ac.get(relations_url)
         if 'schema' in resp:

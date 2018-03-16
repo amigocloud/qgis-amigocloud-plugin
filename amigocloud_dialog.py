@@ -31,8 +31,8 @@ from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
 
-from utils.CacheManager import CacheManager
-from .amigo_api import AmigoAPI
+from .utils.CacheManager import CacheManager
+from .utils.amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'amigocloud_dialog_base.ui'))
@@ -131,14 +131,12 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
     def fill_project_list(self):
         self.p_list_widget.clear()
-        remote_ids = []
         for project in self.projects_list:
             p_url = project["url"]
             p_id = project["id"]
             p_name = project["name"]
             p_hash = project["hash"]
             p_img_url = project["preview_image"]
-            remote_ids.append(p_id)
 
             # Checks if there is a new project on the remote server
             if self.cm.verify_project_exists(p_id):
@@ -161,15 +159,11 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
             # Resizes the icon so it can be properly visualized
             self.p_list_widget.setIconSize(self.iconSize)
 
-        local_ids = self.cm.load_local_project_id()
-        self.cm.project_trashcan(remote_ids, local_ids)
         return self.p_list_widget
 
     def fill_datasets_list(self, project_id):
         self.ds_list_widget.clear()
         dataset_list = self.amigo_api.fetch_dataset_list(project_id)
-        remote_ids = []
-        ds_p_id = None
         for dataset in dataset_list:
             if dataset["visible"]:
                 ds_id = dataset["id"]
@@ -177,10 +171,6 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                 ds_name = dataset["name"]
                 ds_hash = dataset["hash"]
                 ds_img_url = dataset["preview_image"]
-                # Formatting of the dataset's url to get the parent project's id
-                ds_p_id = re.search("projects/(.*)/datasets", ds_url).group(1)
-
-                remote_ids.append(ds_id)
 
                 # Checks if there is a new project on the remote server
                 if self.cm.verify_dataset_exists(ds_id):
@@ -199,6 +189,3 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                 self.ds_list_widget.addItem(item)
                 self.ds_list_widget.setIconSize(self.iconSize)
 
-        # Deletes the datasets on the cache that are no longer on remote
-        local_ids = self.cm.load_local_dataset_id(ds_p_id)
-        self.cm.dataset_trashcan(remote_ids, local_ids)

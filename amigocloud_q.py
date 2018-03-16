@@ -27,11 +27,11 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
+from .utils.amigo_api import AmigoAPI
+from .amigocloud_dialog import AmigoCloudDialog
 from .utils.DSRelManager import DSRelManager
 from .utils.PicklistManager import PicklistManager
 from .utils.QGISManager import QGISManager
-from .amigo_api import AmigoAPI
-from .amigocloud_dialog import AmigoCloudDialog
 
 
 class AmigoCloudQ:
@@ -215,7 +215,9 @@ class AmigoCloudQ:
                 rel_manager.relate(relations)
 
                 pk_manager = PicklistManager()
-                print(pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id()))
+                print(pk_manager.manage_picklists(self.dlg.get_name(), self.api.fetch_dataset_schema(
+                    self.dlg.get_project_id(), self.dlg.get_dataset_id()
+                )))
 
             else:
                 self.dlg.amigo_api.send_analytics_event("User",

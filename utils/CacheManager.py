@@ -8,7 +8,7 @@ import urllib.request
 '''
 
 
-class CacheManager:
+class Cach2eManager:
     def __init__(self):
         self.temp_dir = tempfile.gettempdir()
         self.db_name = "amigocloud_local_db.db"

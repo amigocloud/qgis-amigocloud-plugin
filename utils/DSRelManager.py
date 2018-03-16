@@ -1,4 +1,4 @@
-from utils.QGISManager import QGISManager
+from .QGISManager import QGISManager
 
 
 class DSRelManager:

@@ -1,5 +1,5 @@
-from amigo_api import AmigoAPI
-from utils.QGISManager import QGISManager
+from .amigo_api import AmigoAPI
+from .QGISManager import QGISManager
 
 
 class PicklistManager:
@@ -15,6 +15,9 @@ class PicklistManager:
 
     def manage_picklists(self, ds_name, ds_schema):
         raw_choices = None
+
+        r = []
+
         for field in ds_schema:
             if 'choices' in field:
                 if field['visible']:
@@ -23,9 +26,10 @@ class PicklistManager:
                     choices = self.format_choices(raw_choices)
                     try:
                         self.qgm.add_value_map(ds_name, field_name, choices)
+                        r.append((ds_name, field_name, choices))
                     except Exception:
                         print("Couldn't access the method 'add_value_map from utils/QGISManager'")
-                    return ds_name, field_name, choices
         if raw_choices is None:
             print('No choices found or picklist marked as not visible')
-            return
+
+        return r
