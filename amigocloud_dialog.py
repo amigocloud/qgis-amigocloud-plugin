@@ -22,15 +22,16 @@
 """
 
 import os
+import re
 import urllib
 import urllib.request
-import re
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
-from .CacheManager import CacheManager
+
+from utils.CacheManager import CacheManager
 from .amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(

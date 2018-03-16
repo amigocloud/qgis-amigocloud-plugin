@@ -1,5 +1,5 @@
-from .amigo_api import AmigoAPI
-from .QGISManager import QGISManager
+from amigo_api import AmigoAPI
+from utils.QGISManager import QGISManager
 
 
 class PicklistManager:

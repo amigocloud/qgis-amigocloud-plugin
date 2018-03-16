@@ -2,7 +2,7 @@ from qgis._core import QgsEditorWidgetSetup
 from qgis._core import QgsProject
 from qgis._core import QgsRelation
 from qgis._core import QgsVectorLayer
-from .amigo_api import AmigoAPI
+from amigo_api import AmigoAPI
 
 
 class QGISManager:

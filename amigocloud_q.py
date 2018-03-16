@@ -21,18 +21,17 @@
  ***************************************************************************/
 """
 import os
+import os.path
+
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-# Initialize Qt resources from file resources.py
-# import resources
-# Import the code for the dialog
-from .amigocloud_dialog import AmigoCloudDialog
+
+from utils.DSRelManager import DSRelManager
+from utils.PicklistManager import PicklistManager
+from utils.QGISManager import QGISManager
 from .amigo_api import AmigoAPI
-import os.path
-from .DSRelManager import DSRelManager
-from .QGISManager import QGISManager
-from .PicklistManager import PicklistManager
+from .amigocloud_dialog import AmigoCloudDialog
 
 
 class AmigoCloudQ:
