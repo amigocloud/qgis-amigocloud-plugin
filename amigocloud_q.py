@@ -27,9 +27,9 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from utils.DSRelManager import DSRelManager
-from utils.PicklistManager import PicklistManager
-from utils.QGISManager import QGISManager
+from .utils.DSRelManager import DSRelManager
+from .utils.PicklistManager import PicklistManager
+from .utils.QGISManager import QGISManager
 from .amigo_api import AmigoAPI
 from .amigocloud_dialog import AmigoCloudDialog
 
