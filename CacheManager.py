@@ -14,15 +14,20 @@ class CacheManager:
         self.db_name = "amigocloud_local_db.db"
         self.temp_path = os.path.join(self.temp_dir, self.db_name)
         self.database = sqlite3.connect(self.temp_path)
-        self.is_dev = False
+        self.is_dev = True
 
     def dev_print(self, content):
         if self.is_dev:
             print(content)
 
+    def open_db(self):
+        self.database = sqlite3.connect(self.temp_path)
+        self.dev_print("Database opened")
+
     def close_db(self):
         self.database.close()
-        # self.database = None
+        self.database = None
+        self.dev_print("Database closed")
 
     def init_db(self):
         try:
@@ -35,11 +40,11 @@ class CacheManager:
                 For this reason, some of the functions are not usable
             '''
             # c.execute(
-            #     "CREATE TABLE IF NOT EXISTS projects (p_id INTEGER, p_name TEXT, p_hash TEXT, p_image BLOB, p_img_hash TEXT, p_updated INTEGER)")
+            #     "CREATE TABLE IF NOT EXISTS projects (p_id INTEGER, p_name TEXT, p_hash TEXT, p_image BLOB, p_img_hash TEXT)")
             # c.execute(
-            #     "CREATE TABLE IF NOT EXISTS datasets (ds_p_url TEXT, ds_url TEXT PRIMARY KEY, ds_id INTEGER, ds_name TEXT, ds_hash TEXT, ds_image BLOB, ds_img_hash TEXT)")
-            c.execute("CREATE TABLE IF NOT EXISTS projects (p_url TEXT, p_id INTEGER, p_hash TEXT, p_img BLOB)")
-            c.execute("CREATE TABLE IF NOT EXISTS datasets (ds_url TEXT, ds_p_url TEXT, ds_id INTEGER, ds_hash TEXT, ds_img BLOB)")
+            #     "CREATE TABLE IF NOT EXISTS datasets (ds_p_id TEXT, ds_url TEXT PRIMARY KEY, ds_id INTEGER, ds_name TEXT, ds_hash TEXT, ds_image BLOB, ds_img_hash TEXT)")
+            c.execute("CREATE TABLE IF NOT EXISTS projects (p_id INTEGER, p_name TEXT, p_url TEXT, p_hash TEXT, p_img BLOB)")
+            c.execute("CREATE TABLE IF NOT EXISTS datasets (ds_id INTEGER, ds_p_id INTEGER, ds_name TEXT, ds_url TEXT, ds_hash TEXT, ds_img BLOB)")
             self.database.commit()
             c.close()
             self.dev_print("Success when initializing tables for images")
@@ -54,10 +59,10 @@ class CacheManager:
         return exists
 
     def verify_project_exists(self, p_id):
-        return self.verify_existence("projects", "p_url", p_id)
+        return self.verify_existence("projects", "p_id", p_id)
 
     def verify_dataset_exists(self, ds_id):
-        return self.verify_existence("datasets", "ds_url", ds_id)
+        return self.verify_existence("datasets", "ds_id", ds_id)
 
     def verify_project_hash_changed(self, p_hash):
         return not self.verify_existence("projects", "p_hash", p_hash)
@@ -71,38 +76,23 @@ class CacheManager:
     def verify_dataset_image_hash_changed(self, ds_img_hash):
         return not self.verify_existence("datasets", "ds_img_hash", ds_img_hash)
 
-    def set_project_updated(self, p_url, p_updated):
-        c = self.database.cursor()
-
-        c.execute("UPDATE projects SET p_updated = ? WHERE p_url = ?", (p_updated, p_url))
-        self.database.commit()
-        c.close()
-
-    def check_project_updated(self, ds_p_url):
-        c = self.database.cursor()
-        r = None
-        for project in c.execute("SELECT * FROM projects WHERE p_url = ? LIMIT 1", (ds_p_url,)):
-            r = project[6]
-        c.close()
-        return r
-
-    def temp_insert_new_project(self, p_url, p_id, p_hash, p_img_url):
+    def temp_insert_new_project(self, p_id, p_name, p_url, p_hash, p_img_url):
         c = self.database.cursor()
 
         p_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(p_img_url).read()
-        new_values = (p_url, p_id, p_hash, img_data)
-        c.execute("INSERT OR REPLACE INTO projects VALUES (?,?,?,?)", new_values)
+        new_values = (p_id, p_name, p_url, p_hash, img_data)
+        c.execute("INSERT OR REPLACE INTO projects VALUES (?,?,?,?,?)", new_values)
         self.database.commit()
         c.close()
 
-    def temp_insert_new_dataset(self, ds_url, ds_p_url, ds_id, ds_hash, ds_img_url):
+    def temp_insert_new_dataset(self, ds_id, ds_p_id, ds_name, ds_url, ds_hash, ds_img_url):
         c = self.database.cursor()
 
         ds_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(ds_img_url).read()
-        new_values = (ds_url, ds_p_url, ds_id, ds_hash, img_data)
-        c.execute("INSERT OR REPLACE INTO datasets VALUES (?,?,?,?,?)", new_values)
+        new_values = (ds_id, ds_p_id, ds_name, ds_url, ds_hash, img_data)
+        c.execute("INSERT OR REPLACE INTO datasets VALUES (?,?,?,?,?,?)", new_values)
         self.database.commit()
         c.close()
 
@@ -131,7 +121,7 @@ class CacheManager:
         row = c.execute("SELECT * FROM projects WHERE p_id = ?", (p_id,))
         r = None
         for load in row:
-            r = load[3]
+            r = load[4]
 
         c.close()
         return r
@@ -141,28 +131,29 @@ class CacheManager:
         row = c.execute("SELECT * FROM datasets WHERE ds_id = ?", (ds_id,))
         r = None
         for load in row:
-            r = load[4]
+            r = load[5]
 
         c.close()
         return r
 
-    def insert_new_project(self, p_url, p_id, p_name, p_hash, p_img_url, p_img_hash, p_updated):
+    # TODO: From now on, most of the methods are based on that the url is the primary key, change it to id
+    def insert_new_project(self, p_url, p_id, p_name, p_hash, p_img_url, p_img_hash):
         c = self.database.cursor()
 
         p_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(p_img_url).read()
-        new_values = (p_url, p_id, p_name, p_hash, img_data, p_img_hash, p_updated)
-        c.execute("INSERT OR IGNORE INTO projects VALUES(?,?,?,?,?,?,?)", new_values)
+        new_values = (p_url, p_id, p_name, p_hash, img_data, p_img_hash)
+        c.execute("INSERT OR IGNORE INTO projects VALUES(?,?,?,?,?,?)", new_values)
         self.database.commit()
 
         c.close()
 
-    def insert_new_dataset(self, ds_p_url, ds_url, ds_id, ds_name, ds_hash, ds_img_url, ds_img_hash):
+    def insert_new_dataset(self, ds_p_id, ds_url, ds_id, ds_name, ds_hash, ds_img_url, ds_img_hash):
         c = self.database.cursor()
 
         ds_img_url += '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         img_data = urllib.request.urlopen(ds_img_url).read()
-        new_values = (ds_p_url, ds_url, ds_id, ds_name, ds_hash, img_data, ds_img_hash)
+        new_values = (ds_p_id, ds_url, ds_id, ds_name, ds_hash, img_data, ds_img_hash)
         c.execute("INSERT OR IGNORE INTO datasets VALUES(?,?,?,?,?,?,?)", new_values)
         self.database.commit()
 
@@ -207,20 +198,20 @@ class CacheManager:
         self.database.commit()
         c.close()
 
-    def load_urls_from_projects_local(self):
+    def load_local_project_id(self):
         c = self.database.cursor()
         r = []
-        for url in c.execute("SELECT * FROM projects"):
-            r.append(url[0])
+        for p_id in c.execute("SELECT * FROM projects"):
+            r.append(p_id[0])
 
         c.close()
         return r
 
-    def load_urls_from_datasets_local(self, ds_p_url):
+    def load_local_dataset_id(self, ds_p_id):
         c = self.database.cursor()
         r = []
-        for url in c.execute("SELECT * FROM datasets WHERE ds_p_url = ?", (ds_p_url,)):
-            r.append(url[0])
+        for ds_id in c.execute("SELECT * FROM datasets WHERE ds_p_id = ?", (ds_p_id,)):
+            r.append(ds_id[0])
 
         c.close()
         return r
@@ -228,7 +219,7 @@ class CacheManager:
     def load_from_projects(self, p_id):
         c = self.database.cursor()
         r = None
-        for load in c.execute("SELECT * FROM projects WHERE p_url = ?", (p_id,)):
+        for load in c.execute("SELECT * FROM projects WHERE p_id = ?", (p_id,)):
             r = load
         c.close()
         return r
@@ -236,7 +227,7 @@ class CacheManager:
     def load_from_datasets(self, ds_id):
         c = self.database.cursor()
         r = None
-        for load in c.execute("SELECT * FROM datasets WHERE ds_url = ?", (ds_id,)):
+        for load in c.execute("SELECT * FROM datasets WHERE ds_id = ?", (ds_id,)):
             r = load
         c.close()
         return r
@@ -254,27 +245,21 @@ class CacheManager:
         c.close()
 
     def project_trashcan(self, remote, local):
-        to_delete = []
         deleted = 0
-        for url in local:
-            if url not in remote:
-                to_delete.append(url)
+        for p_id in local:
+            if p_id not in remote:
+                self.delete_project_local(p_id)
+                deleted += 1
 
-        for row in to_delete:
-            self.delete_project_local(row)
-            deleted += 1
         self.dev_print("___________________________________________________\n")
         self.dev_print("[" + str(deleted) + "] projects deleted from local")
 
     def dataset_trashcan(self, remote, local):
-        to_delete = []
         deleted = 0
-        for url in local:
-            if url not in remote:
-                to_delete.append(url)
-        self.dev_print(to_delete)
-        for row in to_delete:
-            self.delete_dataset_local(row)
-            deleted += 1
+        for ds_id in local:
+            if ds_id not in remote:
+                self.delete_dataset_local(ds_id)
+                deleted += 1
+
         self.dev_print("___________________________________________________\n")
         self.dev_print("[" + str(deleted) + "] datasets deleted from local")

@@ -104,7 +104,7 @@ class AmigoCloudQ:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
-        parent=None):
+        parent = None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -193,6 +193,7 @@ class AmigoCloudQ:
 
         # show the dialog
         self.dlg.show()
+        self.dlg.cm.open_db()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -217,8 +218,8 @@ class AmigoCloudQ:
                 pk_manager = PicklistManager()
                 pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
 
-                self.dlg.cm.close_db()
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
+        self.dlg.cm.close_db()

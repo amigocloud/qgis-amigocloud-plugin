@@ -24,6 +24,7 @@
 import os
 import urllib
 import urllib.request
+import re
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
@@ -94,8 +95,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def get_token(self):
         return self.settings.value('tokenValue')
 
-    @staticmethod
-    def load_image(url):
+    def load_image(self, url):
         url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
         data = urllib.request.urlopen(url).read()
         image = QtGui.QImage()
@@ -103,8 +103,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         return image
 
     # Makes a new QIcon based on a local image
-    @staticmethod
-    def new_icon(pixmap_content):
+    def new_icon(self, pixmap_content):
         # Pixmap object that will contain the image
         pixmap = QPixmap()
         # Now the pixmap contains the information from the image
@@ -131,23 +130,23 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
     def fill_project_list(self):
         self.p_list_widget.clear()
-        remote_urls = []
+        remote_ids = []
         for project in self.projects_list:
             p_url = project["url"]
             p_id = project["id"]
             p_name = project["name"]
             p_hash = project["hash"]
             p_img_url = project["preview_image"]
-            remote_urls.append(p_url)
+            remote_ids.append(p_id)
 
             # Checks if there is a new project on the remote server
-            if self.cm.verify_project_exists(p_url):
+            if self.cm.verify_project_exists(p_id):
                 # Check if the project's hash has changed. If not, just load everything from local
                 if self.cm.verify_project_hash_changed(p_hash):
                     self.cm.temp_update_project(p_id, p_hash, p_img_url)
             else:
-                self.cm.temp_insert_new_project(p_url, p_id, p_hash, p_img_url)
-                self.cm.dev_print("New project found. Inserting to local DB...")
+                self.cm.temp_insert_new_project(p_id, p_name, p_url, p_hash, p_img_url)
+                self.cm.dev_print("New project found: " + p_name + ". Inserting to local DB...")
 
             p_img = self.cm.temp_get_project_image(p_id)
 
@@ -161,32 +160,34 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
             # Resizes the icon so it can be properly visualized
             self.p_list_widget.setIconSize(self.iconSize)
 
-        local_urls = self.cm.load_urls_from_projects_local()
-        self.cm.project_trashcan(remote_urls, local_urls)
+        local_ids = self.cm.load_local_project_id()
+        self.cm.project_trashcan(remote_ids, local_ids)
         return self.p_list_widget
 
     def fill_datasets_list(self, project_id):
         self.ds_list_widget.clear()
         dataset_list = self.amigo_api.fetch_dataset_list(project_id)
-        remote_urls = []
-        ds_p_url = None
+        remote_ids = []
+        ds_p_id = None
         for dataset in dataset_list:
             if dataset["visible"]:
                 ds_id = dataset["id"]
                 ds_url = dataset["url"]
-                # TODO: Fix this
-                ds_p_url = ''
                 ds_name = dataset["name"]
                 ds_hash = dataset["hash"]
                 ds_img_url = dataset["preview_image"]
+                # Formatting of the dataset's url to get the parent project's id
+                ds_p_id = re.search("projects/(.*)/datasets", ds_url).group(1)
+
+                remote_ids.append(ds_id)
 
                 # Checks if there is a new project on the remote server
-                if self.cm.verify_dataset_exists(ds_url):
+                if self.cm.verify_dataset_exists(ds_id):
                     # Check if the project's hash has changed. If not, just load everything from local
                     if self.cm.verify_dataset_hash_changed(ds_hash):
                         self.cm.temp_update_dataset(ds_id, ds_hash, ds_img_url)
                 else:
-                    self.cm.temp_insert_new_dataset(ds_url, ds_p_url, ds_id, ds_hash, ds_img_url)
+                    self.cm.temp_insert_new_dataset(ds_id, ds_p_id, ds_name, ds_url, ds_hash, ds_img_url)
                     self.cm.dev_print("New dataset found. Inserting to local DB...")
 
                 ds_img = self.cm.temp_get_dataset_image(ds_id)
@@ -198,5 +199,5 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                 self.ds_list_widget.setIconSize(self.iconSize)
 
         # Deletes the datasets on the cache that are no longer on remote
-        local_urls = self.cm.load_urls_from_datasets_local(ds_p_url)
-        self.cm.dataset_trashcan(remote_urls, local_urls)
+        local_ids = self.cm.load_local_dataset_id(ds_p_id)
+        self.cm.dataset_trashcan(remote_ids, local_ids)
