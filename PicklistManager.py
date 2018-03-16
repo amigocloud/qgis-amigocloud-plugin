@@ -23,6 +23,7 @@ class PicklistManager:
                     field_name = field['name']
                     choices = self.format_choices(raw_choices)
                     self.qgm.add_value_map(ds_name, field_name, choices)
+                    return ds_name, field_name, choices
         if raw_choices is None:
             print('No choices found or picklist marked as not visible')
             return

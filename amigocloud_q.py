@@ -216,7 +216,7 @@ class AmigoCloudQ:
                 rel_manager.relate(relations)
 
                 pk_manager = PicklistManager()
-                pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                print(pk_manager.manage_picklists(self.dlg.get_name(), self.dlg.get_project_id(), self.dlg.get_dataset_id()))
 
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
