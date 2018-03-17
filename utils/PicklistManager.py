@@ -28,7 +28,7 @@ class PicklistManager:
                         self.qgm.add_value_map(ds_name, field_name, choices)
                         r.append((ds_name, field_name, choices))
                     except Exception:
-                        print("Couldn't access the method 'add_value_map from utils/QGISManager'")
+                        print("Couldn't access the method 'add_value_map' from utils/QGISManager")
         if raw_choices is None:
             print('No choices found or picklist marked as not visible')
 

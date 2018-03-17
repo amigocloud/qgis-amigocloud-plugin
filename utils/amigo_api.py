@@ -5,12 +5,14 @@ import os
 import requests
 
 from .amigocloud import AmigoCloud
+from .CacheManager import CacheManager
 
 
 class AmigoAPI:
     def __init__(self):
         try:
             self.token = os.environ['AMIGOCLOUD_API_KEY']
+            self.cm = CacheManager()
         except:
             self.token = ''
         self.url = 'https://www.amigocloud.com'
@@ -46,13 +48,18 @@ class AmigoAPI:
         else:
             return []
 
-    def fetch_dataset_schema(self, project_id, dataset_id):
-        relations_url = self.url + '/api/v1/users/0/projects/' + project_id + '/datasets/' + dataset_id + '/schema/'
-        resp = self.ac.get(relations_url)
+    def fetch_dataset_schema_from_url(self, url):
+        url += "/schema/"
+        resp = self.ac.get(url)
         if 'schema' in resp:
             return resp['schema']
         else:
             return []
+
+    def get_usr_id(self):
+        url = "https://www.amigocloud.com/api/v1/me"
+        resp = self.ac.get(url)
+        return resp['id']
 
     def fetch_mixpanel_token(self):
         tracking_url = self.url + '/api/v1/utils/tracking/'

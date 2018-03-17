@@ -25,6 +25,7 @@ import os
 import re
 import urllib
 import urllib.request
+import json
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
@@ -135,19 +136,16 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
             p_url = project["url"]
             p_id = project["id"]
             p_name = project["name"]
-            p_hash = project["hash"]
+            p_img_hash = project["preview_image_hash"]
             p_img_url = project["preview_image"]
 
-            # Checks if there is a new project on the remote server
-            if self.cm.verify_project_exists(p_id):
-                # Check if the project's hash has changed. If not, just load everything from local
-                if self.cm.verify_project_hash_changed(p_hash):
-                    self.cm.temp_update_project(p_id, p_hash, p_img_url)
+            if self.cm.verify_row_exists(p_url):
+                if self.cm.verify_img_hash_changed(p_img_hash, True):
+                    self.cm.update_img(p_img_hash, p_img_url, p_url)
             else:
-                self.cm.temp_insert_new_project(p_id, p_name, p_url, p_hash, p_img_url)
-                self.cm.dev_print("New project found: " + p_name + ". Inserting to local DB...")
+                self.cm.add_row(p_url, p_name, None, None, p_img_hash, p_img_url)
 
-            p_img = self.cm.temp_get_project_image(p_id)
+            p_img = self.cm.fetch_img(p_url)
 
             # Individual item of the project list. Contains the actual name of the project.
             item = QListWidgetItem(p_name, self.p_list_widget)
@@ -166,23 +164,26 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         dataset_list = self.amigo_api.fetch_dataset_list(project_id)
         for dataset in dataset_list:
             if dataset["visible"]:
-                ds_id = dataset["id"]
                 ds_url = dataset["url"]
+                ds_id = dataset["id"]
                 ds_name = dataset["name"]
-                ds_hash = dataset["hash"]
+                ds_schema_hash = dataset["schema_hash"]
+                ds_img_hash = dataset["preview_image_hash"]
                 ds_img_url = dataset["preview_image"]
 
-                # Checks if there is a new project on the remote server
-                if self.cm.verify_dataset_exists(ds_id):
-                    # Check if the project's hash has changed. If not, just load everything from local
-                    if self.cm.verify_dataset_hash_changed(ds_hash):
-                        self.cm.temp_update_dataset(ds_id, ds_hash, ds_img_url)
+                if self.cm.verify_row_exists(ds_url):
+                    if self.cm.verify_img_hash_changed(ds_img_hash, False):
+                        self.cm.update_img(ds_img_hash, ds_img_url, ds_url)
+                    if self.cm.verify_schema_hash_changed(ds_schema_hash, False):
+                        ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
+                        ds_schema = self.cm.format_json_to_insert(ds_schema)
+                        self.cm.update_schema(ds_schema_hash, ds_schema, ds_url)
                 else:
-                    self.cm.temp_insert_new_dataset(ds_id, ds_p_id, ds_name, ds_url, ds_hash, ds_img_url)
-                    self.cm.dev_print("New dataset found. Inserting to local DB...")
+                    ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
+                    ds_schema = self.cm.format_json_to_insert(ds_schema)
+                    self.cm.add_row(ds_url, ds_name, ds_schema_hash, ds_schema, ds_img_hash, ds_img_url)
 
-                ds_img = self.cm.temp_get_dataset_image(ds_id)
-
+                ds_img = self.cm.fetch_img(ds_url)
                 item = QListWidgetItem(ds_name, self.ds_list_widget)
                 item.setIcon(self.new_icon(ds_img))
                 item.setData(Qt.UserRole, ds_id)

@@ -32,7 +32,7 @@ from .amigocloud_dialog import AmigoCloudDialog
 from .utils.DSRelManager import DSRelManager
 from .utils.PicklistManager import PicklistManager
 from .utils.QGISManager import QGISManager
-
+from .utils.CacheManager import CacheManager
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -59,6 +59,7 @@ class AmigoCloudQ:
         # Api instance
         self.api = AmigoAPI()
         self.qgm = QGISManager()
+        self.cm = CacheManager()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -215,9 +216,8 @@ class AmigoCloudQ:
                 rel_manager.relate(relations)
 
                 pk_manager = PicklistManager()
-                print(pk_manager.manage_picklists(self.dlg.get_name(), self.api.fetch_dataset_schema(
-                    self.dlg.get_project_id(), self.dlg.get_dataset_id()
-                )))
+                schema = self.cm.fetch_schema(self.api.get_usr_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                pk_manager.manage_picklists(self.dlg.get_name(), schema)
 
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
