@@ -63,8 +63,6 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
         self.apiKeyValue = self.settings.value('apiKeyValue')
 
-        self.readAllFromLocal = []
-
         self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
         if self.get_token() and len(self.get_token()) > 0:
@@ -178,11 +176,9 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                     # TODO: Change the second parameter to True when issue #3735 of amigoserver is solved
                     if self.cm.verify_schema_hash_changed(ds_schema_hash, False):
                         ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
-                        ds_schema = self.cm.format_json_to_insert(ds_schema)
                         self.cm.update_schema(ds_schema_hash, ds_schema, ds_url)
                 else:
                     ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
-                    ds_schema = self.cm.format_json_to_insert(ds_schema)
                     self.cm.add_row(ds_url, ds_name, ds_schema_hash, ds_schema, ds_img_hash, ds_img_url)
 
                 ds_img = self.cm.fetch_img(ds_url)

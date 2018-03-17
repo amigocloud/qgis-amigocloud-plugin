@@ -76,6 +76,7 @@ class CacheManager:
             return True
 
     def add_row(self, url, name, schema_hash, schema, img_hash, img_url):
+        schema = self.format_json_to_insert(schema)
         img_url += "?token=" + os.environ["AMIGOCLOUD_API_KEY"]
         img = urllib.request.urlopen(img_url).read()
         values = (url, name, schema_hash, schema, img_hash, img)
@@ -100,6 +101,7 @@ class CacheManager:
         self.dev_print("Row updated -> url: [" + url + "] @ [" + column + "]")
 
     def update_schema(self, schema_hash, schema, url):
+        schema = self.format_json_to_insert(schema)
         values = (schema_hash, schema, url)
         c = self.database.cursor()
         c.execute("UPDATE local_cache SET schema_hash = ?, schema = ? WHERE url = ?", values)
