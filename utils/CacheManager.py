@@ -15,7 +15,7 @@ class CacheManager:
         self.db_name = "AC_local_cache.db"
         self.temp_path = os.path.join(self.temp_dir, self.db_name)
         self.database = sqlite3.connect(self.temp_path)
-        self.is_dev = True
+        self.is_dev = False
 
     def dev_print(self, content):
         if self.is_dev:
@@ -23,12 +23,14 @@ class CacheManager:
 
     def open_db(self):
         self.database = sqlite3.connect(self.temp_path)
+        self.dev_print("_____________________\n")
         self.dev_print("Database opened")
 
     def close_db(self):
         self.database.close()
         self.database = None
         self.dev_print("Database closed")
+        self.dev_print("_____________________")
 
     def format_json_to_insert(self, my_list):
         # The json library of Python requires double quotes instead of simple ones
@@ -40,16 +42,16 @@ class CacheManager:
         return ast.literal_eval(string)
 
     def init_db(self):
-        # try:
-        c = self.database.cursor()
+        try:
+            c = self.database.cursor()
 
-        c.execute("CREATE TABLE IF NOT EXISTS local_cache (url TEXT NOT NULL PRIMARY KEY, name TEXT, schema_hash TEXT, schema TEXT, img_hash TEXT, img BLOB)")
+            c.execute("CREATE TABLE IF NOT EXISTS local_cache (url TEXT NOT NULL PRIMARY KEY, name TEXT, schema_hash TEXT, schema TEXT, img_hash TEXT, img BLOB)")
 
-        self.database.commit()
-        c.close()
-        self.dev_print("Success when initializing local cache")
-        # except sqlite3.Error:
-        #     self.dev_print("Something failed when initializing local cache")
+            self.database.commit()
+            c.close()
+            self.dev_print("Success when initializing local cache")
+        except sqlite3.Error:
+            self.dev_print("Something failed when initializing local cache")
 
     def verify_existence(self, column_name, column_to_verify):
         c = self.database.cursor()
@@ -98,20 +100,25 @@ class CacheManager:
         self.dev_print("Row updated -> url: [" + url + "] @ [" + column + "]")
 
     def update_schema(self, schema_hash, schema, url):
-        self.update_value("schema_hash", schema_hash, url)
-        self.update_value("schema", schema, url)
+        values = (schema_hash, schema, url)
+        c = self.database.cursor()
+        c.execute("UPDATE local_cache SET schema_hash = ?, schema = ? WHERE url = ?", values)
+        c.close()
+        self.dev_print("Row updated -> url: [" + url + "] @ schema && schema_hash")
 
     def update_img(self, img_hash, img_url, url):
-        self.update_value("img_hash", img_hash, url)
         img_url += "?token=" + os.environ["AMIGOCLOUD_API_KEY"]
         img = urllib.request.urlopen(img_url).read()
-        self.update_value("img", img, url)
+        c = self.database.cursor()
+        values = (img_hash, img, url)
+        c.execute("UPDATE local_cache SET img_hash = ?, img = ? WHERE url = ?", values)
+        c.close()
+        self.dev_print("Row updated -> url: [" + url + "] @ img && img_hash")
 
     def fetch_img(self, url):
         return self.fetch_value("img", url)
 
     def fetch_schema(self, usr_id, project_id, dataset_id):
-        self.dev_print("Schema returned from local")
         url = "https://www.amigocloud.com/api/v1/users/" + str(usr_id) + "/projects/" + str(project_id) + "/datasets/" + str(dataset_id)
         r = self.fetch_value("schema", url)
         r = self.format_json_after_fetch(r)

@@ -59,7 +59,10 @@ class AmigoAPI:
     def get_usr_id(self):
         url = "https://www.amigocloud.com/api/v1/me"
         resp = self.ac.get(url)
-        return resp['id']
+        if 'id' in resp:
+            return resp['id']
+        else:
+            return ''
 
     def fetch_mixpanel_token(self):
         tracking_url = self.url + '/api/v1/utils/tracking/'

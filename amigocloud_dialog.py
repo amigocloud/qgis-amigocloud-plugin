@@ -172,8 +172,10 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                 ds_img_url = dataset["preview_image"]
 
                 if self.cm.verify_row_exists(ds_url):
+                    # TODO: Change the second parameter to True when issue #3708 of amigoserver is solved
                     if self.cm.verify_img_hash_changed(ds_img_hash, False):
                         self.cm.update_img(ds_img_hash, ds_img_url, ds_url)
+                    # TODO: Change the second parameter to True when issue #3735 of amigoserver is solved
                     if self.cm.verify_schema_hash_changed(ds_schema_hash, False):
                         ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
                         ds_schema = self.cm.format_json_to_insert(ds_schema)

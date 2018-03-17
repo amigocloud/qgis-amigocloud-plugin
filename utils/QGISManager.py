@@ -9,6 +9,11 @@ from .amigo_api import AmigoAPI
 class QGISManager:
     def __init__(self):
         self.api = AmigoAPI()
+        self.is_dev = False
+
+    def dev_print(self, content):
+        if self.is_dev:
+            print(content)
 
     def add_layer(self, uri, name):
         v_layer = QgsVectorLayer(uri, name, "ogr")
@@ -30,9 +35,9 @@ class QGISManager:
         # Adding the relation only if it's valid
         if rel.isValid():
             QgsProject.instance().relationManager().addRelation(rel)
-            print('Relation added: ' + relation_name)
+            self.dev_print('Relation added: ' + relation_name)
         else:
-            print('Relation failed </3')
+            self.dev_print('Relation failed </3')
 
     def add_value_map(self, layer_name, field_name, dict_choices):
         try:
@@ -45,9 +50,9 @@ class QGISManager:
                     }
                                                                )
                     layer.setEditorWidgetSetup(field_index, editor_widget_setup)
-                    print('ValueMap added')
+                    self.dev_print('ValueMap added')
             else:
-                print("Layer or choices don't exist")
+                self.dev_print("Layer or choices don't exist")
                 return
         except Exception:
             print('Exception raised')
