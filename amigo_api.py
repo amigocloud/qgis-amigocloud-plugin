@@ -3,14 +3,21 @@ import base64
 import requests
 import json
 from .amigocloud import AmigoCloud
+from urllib.parse import urlparse
 
 class AmigoAPI:
     def __init__(self):
         try:
             self.token = os.environ['AMIGOCLOUD_API_KEY']
-        except:
+        except KeyError:
             self.token = ''
-        self.url = 'https://www.amigocloud.com'
+
+        try:
+            gdal_url = urlparse(os.environ['AMIGOCLOUD_API_URL'])
+            self.url = gdal_url.scheme + "://" + gdal_url.netloc
+        except KeyError:
+            self.url = 'https://www.amigocloud.com'
+
         self.ac = AmigoCloud(token=self.token, base_url=self.url)
         self.mixpanel_token = self.fetch_mixpanel_token()
         self.plugin_version = "0.7"
