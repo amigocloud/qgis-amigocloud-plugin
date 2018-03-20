@@ -1,10 +1,8 @@
-from .amigo_api import AmigoAPI
 from .QGISManager import QGISManager
 
 
 class PicklistManager:
     def __init__(self):
-        self.api = AmigoAPI()
         self.qgm = QGISManager()
 
     def format_choices(self, dictionary):

@@ -22,17 +22,14 @@
 """
 
 import os
-import re
 import urllib
 import urllib.request
-import json
 
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
 from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
 
-from .utils.CacheManager import CacheManager
 from .utils.amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -44,12 +41,10 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         """Constructor."""
         super(AmigoCloudDialog, self).__init__(parent)
 
-        self.amigo_api = AmigoAPI()
-        self.cm = CacheManager()
-        self.cm.init_db()
-        self.projects_list = self.amigo_api.fetch_project_list()
-        self.iconSize = QSize(50, 50)
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
+        self.amigo_api = AmigoAPI(self.get_token())
+        self.projects_list = self.amigo_api.fetch_project_list(False)
+        self.iconSize = QSize(50, 50)
         self.setupUi(self)
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
         self.p_list_widget.itemClicked.connect(self.project_clicked)
@@ -62,6 +57,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         self.syncButton.clicked.connect(self.sync)
 
         self.apiKeyValue = self.settings.value('apiKeyValue')
+        print("self.apiKeyValue : ", self.apiKeyValue)
 
         self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.textChanged.connect(self.on_token_changed)
@@ -77,8 +73,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                                             self.amigo_api.ac.get_user_email())
 
     def sync(self):
-        self.cm.dev_print("Synchronizing...")
-        self.projects_list = self.amigo_api.fetch_project_list()
+        self.projects_list = self.amigo_api.fetch_project_list(False)
         if len(self.projects_list) > 0:
             os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
             self.fill_project_list()
@@ -115,7 +110,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def on_token_changed(self, token):
         self.settings.setValue('tokenValue', token)
         self.amigo_api.set_token(token)
-        self.projects_list = self.amigo_api.fetch_project_list()
+        self.projects_list = self.amigo_api.fetch_project_list(False)
         if len(self.projects_list) > 0:
             os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
             self.fill_project_list()
@@ -137,13 +132,15 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
             p_img_hash = project["preview_image_hash"]
             p_img_url = project["preview_image"]
 
-            if self.cm.verify_row_exists(p_url):
-                if self.cm.verify_img_hash_changed(p_img_hash, True):
-                    self.cm.update_img(p_img_hash, p_img_url, p_url)
-            else:
-                self.cm.add_row(p_url, p_name, None, None, p_img_hash, p_img_url)
+            # Check the hash to see if preview image has changed
+            hash_key = p_url
+            stored_hash = self.amigo_api.get_hash(hash_key)
+            use_cache = False
+            if p_img_hash == stored_hash:
+                use_cache = True
 
-            p_img = self.cm.fetch_img(p_url)
+            p_img = self.amigo_api.fetch_img(p_img_url, use_cache=use_cache)
+            self.amigo_api.store_hash(hash_key, p_img_hash)
 
             # Individual item of the project list. Contains the actual name of the project.
             item = QListWidgetItem(p_name, self.p_list_widget)
@@ -169,19 +166,16 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                 ds_img_hash = dataset["preview_image_hash"]
                 ds_img_url = dataset["preview_image"]
 
-                if self.cm.verify_row_exists(ds_url):
-                    # TODO: Change the second parameter to True when issue #3708 of amigoserver is solved
-                    if self.cm.verify_img_hash_changed(ds_img_hash, False):
-                        self.cm.update_img(ds_img_hash, ds_img_url, ds_url)
-                    # TODO: Change the second parameter to True when issue #3735 of amigoserver is solved
-                    if self.cm.verify_schema_hash_changed(ds_schema_hash, False):
-                        ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
-                        self.cm.update_schema(ds_schema_hash, ds_schema, ds_url)
-                else:
-                    ds_schema = self.amigo_api.fetch_dataset_schema_from_url(ds_url)
-                    self.cm.add_row(ds_url, ds_name, ds_schema_hash, ds_schema, ds_img_hash, ds_img_url)
+                # Check the hash to see if preview image has changed
+                hash_key = ds_url
+                stored_hash = self.amigo_api.get_hash(hash_key)
+                use_cache = False
+                if ds_img_hash == stored_hash:
+                    use_cache = True
 
-                ds_img = self.cm.fetch_img(ds_url)
+                ds_img = self.amigo_api.fetch_img(ds_img_url, use_cache=use_cache)
+                self.amigo_api.store_hash(hash_key, ds_img_hash)
+
                 item = QListWidgetItem(ds_name, self.ds_list_widget)
                 item.setIcon(self.new_icon(ds_img))
                 item.setData(Qt.UserRole, ds_id)

@@ -3,12 +3,10 @@ from qgis._core import QgsProject
 from qgis._core import QgsRelation
 from qgis._core import QgsVectorLayer
 
-from .amigo_api import AmigoAPI
-
 
 class QGISManager:
     def __init__(self):
-        self.api = AmigoAPI()
+        # self.api = AmigoAPI()
         self.is_dev = False
 
     def dev_print(self, content):

@@ -27,12 +27,10 @@ from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from .utils.amigo_api import AmigoAPI
 from .amigocloud_dialog import AmigoCloudDialog
 from .utils.DSRelManager import DSRelManager
 from .utils.PicklistManager import PicklistManager
 from .utils.QGISManager import QGISManager
-from .utils.CacheManager import CacheManager
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -56,10 +54,7 @@ class AmigoCloudQ:
             'i18n',
             'amigocloud_{}.qm'.format(locale))
 
-        # Api instance
-        self.api = AmigoAPI()
         self.qgm = QGISManager()
-        self.cm = CacheManager()
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -193,7 +188,6 @@ class AmigoCloudQ:
 
         # show the dialog
         self.dlg.show()
-        self.dlg.cm.open_db()
         # Run the dialog event loop
         result = self.dlg.exec_()
         # See if OK was pressed
@@ -212,15 +206,15 @@ class AmigoCloudQ:
                 self.qgm.add_layer(uri, self.dlg.get_name())
 
                 rel_manager = DSRelManager()
-                relations = self.api.fetch_dataset_relations(self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                relations = self.dlg.amigo_api.fetch_dataset_relations(self.dlg.get_project_id(), self.dlg.get_dataset_id())
+
                 rel_manager.relate(relations)
 
                 pk_manager = PicklistManager()
-                schema = self.cm.fetch_schema(self.api.get_usr_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                schema = self.dlg.amigo_api.fetch_schema(self.dlg.amigo_api.get_usr_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id(), False)
                 pk_manager.manage_picklists(self.dlg.get_name(), schema)
 
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
-        self.dlg.cm.close_db()
