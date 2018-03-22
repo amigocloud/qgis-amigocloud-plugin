@@ -21,12 +21,12 @@ class QGISManager:
         return QgsProject.instance().mapLayersByName('b\'' + name + '\'')
 
     def make_relation(self, child_layer, parent_layer, foreign_key, primary_key, relation_id):
-        relation_name = 'from_' + child_layer.name() + '_to_' + parent_layer.name()
+        relation_name = 'from_' + parent_layer.name() + '_to_' + child_layer.name()
         # Setting up the relation
         rel = QgsRelation()
-        rel.setReferencingLayer(child_layer.id())
-        rel.setReferencedLayer(parent_layer.id())
-        rel.addFieldPair(foreign_key, primary_key)
+        rel.setReferencingLayer(parent_layer.id())
+        rel.setReferencedLayer(child_layer.id())
+        rel.addFieldPair(primary_key, foreign_key)
         rel.setId(relation_id)
         rel.setName(relation_name)
 
