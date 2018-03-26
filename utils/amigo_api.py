@@ -18,7 +18,7 @@ class AmigoAPI:
         self.base_url = 'https://www.amigocloud.com'
         self.ac = AmigoCloud(token=self.token, base_url=self.base_url)
         self.mixpanel_token = self.fetch_mixpanel_token()
-        self.plugin_version = "0.7"
+        self.plugin_version = "0.9"
         self.cm = CacheManager()
 
     def set_token(self, token):
