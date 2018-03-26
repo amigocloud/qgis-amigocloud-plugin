@@ -28,8 +28,9 @@ import urllib.request
 from PyQt5 import QtGui, uic
 from PyQt5.QtCore import QSettings, Qt, QSize
 from PyQt5.QtGui import QPixmap, QIcon
-from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton
+from PyQt5.QtWidgets import QDialog, QListWidget, QLineEdit, QListWidgetItem, QPushButton, QLabel, QToolButton
 
+from .settings_dialog import SettingsDialog
 from .utils.amigo_api import AmigoAPI
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
@@ -52,17 +53,10 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         self.ds_list_widget = self.findChild(QListWidget, 'datasets_listWidget')
         self.ds_list_widget.itemClicked.connect(self.dataset_clicked)
 
-        self.syncButton = QPushButton('Sync.', self)
-        self.syncButton.move(698, 32)
-        self.syncButton.clicked.connect(self.sync)
-
         self.apiKeyValue = self.settings.value('apiKeyValue')
-        print("self.apiKeyValue : ", self.apiKeyValue)
 
-        self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
-        self.token_lineEdit.textChanged.connect(self.on_token_changed)
-        if self.get_token() and len(self.get_token()) > 0:
-            self.token_lineEdit.setText(self.get_token())
+        self.user_label = self.findChild(QLabel, 'user_label')
+        self.user_label.setText('User: ' + self.amigo_api.get_user_name())
 
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
 
@@ -72,11 +66,18 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
                                             "Start (QGIS-plugin)",
                                             self.amigo_api.ac.get_user_email())
 
-    def sync(self):
-        self.projects_list = self.amigo_api.fetch_project_list(False)
-        if len(self.projects_list) > 0:
-            os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
-            self.fill_project_list()
+        self.settings_button = self.findChild(QToolButton, 'settings_button')
+        self.settings_button.clicked.connect(self.settings_pressed)
+
+        self.fetch_project_list()
+
+    def settings_pressed(self):
+        dialog = SettingsDialog()
+        dialog.show()
+        result = dialog.exec_()
+        # See if OK was pressed
+        if result:
+            self.fetch_project_list()
 
     def get_name(self):
         return self.settings.value('nameValue')
@@ -97,19 +98,13 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         image.loadFromData(data)
         return image
 
-    # Makes a new QIcon based on a local image
     def new_icon(self, pixmap_content):
-        # Pixmap object that will contain the image
         pixmap = QPixmap()
-        # Now the pixmap contains the information from the image
         pixmap.loadFromData(pixmap_content)
-        # A new icon is created with the pixmap as its background image
         icon = QIcon(pixmap)
         return icon
 
-    def on_token_changed(self, token):
-        self.settings.setValue('tokenValue', token)
-        self.amigo_api.set_token(token)
+    def fetch_project_list(self):
         self.projects_list = self.amigo_api.fetch_project_list(False)
         if len(self.projects_list) > 0:
             os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()

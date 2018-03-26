@@ -65,7 +65,15 @@ class AmigoAPI:
         r = self.fetch(url, use_cache)
         return r['schema']
 
-    def get_usr_id(self):
+    def get_user_name(self):
+        url = "https://www.amigocloud.com/api/v1/me"
+        resp = self.ac.get(url)
+        if 'email' in resp and 'first_name' in resp and 'last_name' in resp:
+            return resp['first_name'] + ' ' + resp['last_name'] + ' <' + resp['email'] + '>'
+        else:
+            return ''
+
+    def get_user_id(self):
         url = "https://www.amigocloud.com/api/v1/me"
         resp = self.ac.get(url)
         if 'id' in resp:

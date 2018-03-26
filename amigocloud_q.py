@@ -186,6 +186,7 @@ class AmigoCloudQ:
     def run(self):
         """Run method that performs all the real work"""
 
+        self.dlg.setModal(False)
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
@@ -206,7 +207,7 @@ class AmigoCloudQ:
                 relations = self.dlg.amigo_api.fetch_dataset_relations(self.dlg.get_project_id(), self.dlg.get_dataset_id())
                 rel_manager.relate(relations)
                 pk_manager = PicklistManager()
-                schema = self.dlg.amigo_api.fetch_schema(self.dlg.amigo_api.get_usr_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id(), False)
+                schema = self.dlg.amigo_api.fetch_schema(self.dlg.amigo_api.get_user_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id(), False)
                 pk_manager.manage_picklists(self.dlg.get_name(), schema)
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
