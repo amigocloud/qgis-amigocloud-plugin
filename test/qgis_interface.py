@@ -24,8 +24,8 @@ __copyright__ = (
 )
 
 import logging
-from PyQt4.QtCore import QObject, pyqtSlot, pyqtSignal
-from qgis.core import QgsMapLayerRegistry
+from PyQt5.QtCore import QObject, pyqtSlot, pyqtSignal
+from qgis.core import QgsProject
 from qgis.gui import QgsMapCanvasLayer
 LOGGER = logging.getLogger('QGIS')
 
@@ -89,7 +89,7 @@ class QgisInterface(QObject):
         .. note: The QgsInterface api does not include this method, it is added
                  here as a helper to facilitate testing.
 
-        .. note: The addLayer method was deprecated in QGIS 1.8 so you should
+        .. note: The add_layer method was deprecated in QGIS 1.8 so you should
                  not need this method much.
         """
         pass

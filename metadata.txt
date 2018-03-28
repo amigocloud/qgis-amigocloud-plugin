@@ -10,7 +10,7 @@
 name=AmigoCloud
 qgisMinimumVersion=3.0
 description=AmigoCloud
-version=0.8
+version=0.9
 author=AmigoCloud
 email=victor@amigocloud.com
 
@@ -30,7 +30,7 @@ tags=webservice, web, wfs, wms, gis
 
 homepage=http://plugins.qgis.org/plugins/qgis-amigocloud-plugin/
 category=Web
-icon=icon.png
+icon=img/icon.png
 # experimental flag
 # experimental=False
 

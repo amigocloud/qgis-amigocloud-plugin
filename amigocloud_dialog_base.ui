@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>460</height>
+    <width>821</width>
+    <height>469</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,25 +35,6 @@
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
    <property name="centerButtons">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="token_label">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>161</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>&quot;&lt;a href=&quot;https://www.amigocloud.com/accounts/tokens&quot;&gt; &lt;font face=verdana&gt;AmigoCloud API Token&lt;/font&gt; &lt;/a&gt;&quot;</string>
-   </property>
-   <property name="textFormat">
-    <enum>Qt::RichText</enum>
-   </property>
-   <property name="openExternalLinks">
     <bool>true</bool>
    </property>
   </widget>
@@ -103,14 +84,30 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="token_lineEdit">
+  <widget class="QLabel" name="user_label">
    <property name="geometry">
     <rect>
-     <x>190</x>
+     <x>10</x>
      <y>10</y>
-     <width>601</width>
-     <height>20</height>
+     <width>771</width>
+     <height>16</height>
     </rect>
+   </property>
+   <property name="text">
+    <string>Loading...</string>
+   </property>
+  </widget>
+  <widget class="QToolButton" name="settings_button">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>420</y>
+     <width>120</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Connection Settings</string>
    </property>
   </widget>
  </widget>

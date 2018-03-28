@@ -20,15 +20,17 @@
  *                                                                         *
  ***************************************************************************/
 """
+import os
+import os.path
+
 from PyQt5.QtCore import QSettings, QTranslator, qVersion, QCoreApplication
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
-# Initialize Qt resources from file resources.py
-# import resources
-# Import the code for the dialog
-from .amigocloud_dialog import amigocloudDialog
-import os.path
-from qgis.core import QgsVectorLayer, QgsProject
+
+from .amigocloud_dialog import AmigoCloudDialog
+from .utils.DSRelManager import DSRelManager
+from .utils.PicklistManager import PicklistManager
+from .utils.QGISManager import QGISManager
 
 class AmigoCloudQ:
     """QGIS Plugin Implementation."""
@@ -52,15 +54,18 @@ class AmigoCloudQ:
             'i18n',
             'amigocloud_{}.qm'.format(locale))
 
+        self.qgm = QGISManager()
+
         if os.path.exists(locale_path):
             self.translator = QTranslator()
             self.translator.load(locale_path)
 
             if qVersion() > '4.3.3':
+                # TODO: Fix this problem below. The function is expecting something else.
                 QCoreApplication.installTranslator(self.translator)
 
         # Create the dialog (after translation) and keep reference
-        self.dlg = amigocloudDialog()
+        self.dlg = AmigoCloudDialog()
 
         # Declare instance attributes
         self.actions = []
@@ -84,7 +89,6 @@ class AmigoCloudQ:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('AmigoCloud', message)
 
-
     def add_action(
         self,
         icon_path,
@@ -95,7 +99,7 @@ class AmigoCloudQ:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
-        parent=None):
+        parent = None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -162,12 +166,12 @@ class AmigoCloudQ:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         icon_path = ':/plugins/amigocloud/icon.png'
+
         self.add_action(
             icon_path,
             text=self.tr(u'AmigoCloud'),
             callback=self.run,
             parent=self.iface.mainWindow())
-
 
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
@@ -179,9 +183,10 @@ class AmigoCloudQ:
         # remove the toolbar
         del self.toolbar
 
-
     def run(self):
         """Run method that performs all the real work"""
+
+        self.dlg.setModal(False)
         # show the dialog
         self.dlg.show()
         # Run the dialog event loop
@@ -192,15 +197,19 @@ class AmigoCloudQ:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Added (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
-                uri = ''
                 if len(self.dlg.get_token()) > 0:
-                    uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + " API_KEY=" + self.dlg.get_token()
+                    uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + \
+                          " API_KEY=" + self.dlg.get_token()
                 else:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id()
-                vlayer = QgsVectorLayer(uri, self.dlg.get_name(), "ogr")
-                QgsProject.instance().addMapLayer(vlayer)
+                self.qgm.add_layer(uri, self.dlg.get_name())
+                rel_manager = DSRelManager()
+                relations = self.dlg.amigo_api.fetch_dataset_relations(self.dlg.get_project_id(), self.dlg.get_dataset_id())
+                rel_manager.relate(relations)
+                pk_manager = PicklistManager()
+                schema = self.dlg.amigo_api.fetch_schema(self.dlg.amigo_api.get_user_id(), self.dlg.get_project_id(), self.dlg.get_dataset_id(), False)
+                pk_manager.manage_picklists(self.dlg.get_name(), schema)
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
                                                         self.dlg.amigo_api.ac.get_user_email())
-
