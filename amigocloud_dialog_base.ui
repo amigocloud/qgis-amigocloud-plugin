@@ -102,12 +102,12 @@
     <rect>
      <x>20</x>
      <y>420</y>
-     <width>91</width>
+     <width>120</width>
      <height>21</height>
     </rect>
    </property>
    <property name="text">
-    <string>Settings</string>
+    <string>Connection Settings</string>
    </property>
   </widget>
  </widget>
