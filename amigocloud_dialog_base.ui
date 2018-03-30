@@ -94,7 +94,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Loading...</string>
+    <string>Please configure your Connection Settings</string>
    </property>
   </widget>
   <widget class="QToolButton" name="settings_button">
