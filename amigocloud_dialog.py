@@ -116,7 +116,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
     def dataset_clicked(self, item):
         self.settings.setValue('datasetIdValue', str(item.data(Qt.UserRole)))
-        self.settings.setValue('nameValue', str(item.text().encode('utf-8')))
+        self.settings.setValue('nameValue', str(item.text()))
 
     def fill_project_list(self):
         self.p_list_widget.clear()
