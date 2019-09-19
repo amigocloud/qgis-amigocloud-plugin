@@ -107,7 +107,6 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def fetch_project_list(self):
         self.projects_list = self.amigo_api.fetch_project_list(False)
         if len(self.projects_list) > 0:
-            os.environ['AMIGOCLOUD_API_KEY'] = self.get_token()
             self.fill_project_list()
 
     def project_clicked(self, item):
