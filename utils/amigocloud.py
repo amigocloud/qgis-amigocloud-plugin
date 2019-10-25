@@ -17,7 +17,7 @@ try:
 except AttributeError:
     pass
 
-BASE_URL = 'https://www.amigocloud.com'
+BASE_URL = 'https://app.amigocloud.com'
 CHUNK_SIZE = 100000  # 100kB
 MAX_SIZE_SIMPLE_UPLOAD = 8000000  # 8MB
 
@@ -39,19 +39,16 @@ class AmigoCloud(object):
     """
     Client for the AmigoCloud REST API.
     Uses API tokens for authentication. To generate yours, go to:
-        https://www.amigocloud.com/accounts/tokens
+        https://app.amigocloud.com/accounts/tokens
     """
 
-    def __init__(self, token=None, project_url=None, base_url=BASE_URL,
-                 use_websockets=False, websocket_port=None):
+    def __init__(self, settings, base_url, project_url=None):
         """
-        :param str token: AmigoCloud API Token
+        :param QSettings settings: global settings
+        :param str base_url: points to https://app.amigocloud.com by default
         :param str project_url: Specify it if you are using a project token
-        :param str base_url: points to https://www.amigocloud.com by default
-        :param bool use_websockets: True by default. Parameter will be ignored
-            when using Project Tokens
-        :param int websocket_port: Standard websocket port by default
         """
+        self.settings = settings
         # Urls
         if base_url.endswith('/'):
             self.base_url = base_url[:-1]
@@ -59,26 +56,26 @@ class AmigoCloud(object):
             self.base_url = base_url
         self.api_url = self.base_url + '/api/v1'
 
-        self._token = None
         self._user_id = None
         self._project_id = None
         self._project_url = None
         self._user_email = None
+        self.authenticate(project_url)
 
-        # Auth
-        if token:
-            self.authenticate(token, project_url)
+    def get_token(self):
+        return self.settings.value('tokenValue')
 
     def get_user_id(self):
         return self._user_id
 
     def get_user_email(self):
-        if self._token and not self._user_email:
+        if not self._user_email:
             response = self.get('/me')
-            if 'email' in response:
-                self._user_email = response['email']
-            if 'id' in response:
-                self._user_id = response['id']
+            if response is not None:
+                if 'email' in response:
+                    self._user_email = response['email']
+                if 'id' in response:
+                    self._user_id = response['id']
         return str(self._user_email)
 
     def build_url(self, url):
@@ -91,27 +88,27 @@ class AmigoCloud(object):
         return '/'.join(
             s.strip('/') for s in (self._project_url or self.api_url, url))
 
-    def check_for_errors(self, response):
+    def is_good(self, response):
         try:
             response.raise_for_status()
+            return True
         except requests.exceptions.HTTPError as exc:
             print('Exception: ', str(exc))
+            return False
 
-    def authenticate(self, token, project_url=None):
-        self._token = token
+    def authenticate(self, project_url=None):
         self._project_url = (self.build_url(project_url) if project_url
                              else None)
         if not self._project_url:
             response = self.get('/me')
-            if 'id' in response.values():
+            if response is not None and 'id' in response.values():
                 self._user_id = response['id']
         else:
             response = self.get('')
-            if 'id' in response.values():
+            if response is not None and 'id' in response.values():
                 self._project_id = response['id']
 
     def logout(self):
-        self._token = None
         self._user_id = None
         self._project_id = None
         self._project_url = None
@@ -125,17 +122,19 @@ class AmigoCloud(object):
         params = params or {}
 
         # Add token (if it's not already there)
-        if self._token:
-            params.setdefault('token', self._token)
+        token = self.get_token()
+        if token:
+            params.setdefault('token', token)
         response = requests.get(full_url, params=params, stream=stream,
                                 **request_kwargs)
-        self.check_for_errors(response)  # Raise exception if something failed
-
-        if stream:
-            return response
-        if raw or not response.content:
-            return response.content
-        return json.loads(response.text)
+        if self.is_good(response):  # Raise exception if something failed
+            if stream:
+                return response
+            if raw or not response.content:
+                return response.content
+            return json.loads(response.text)
+        else:
+            return None
 
     def _secure_request(self, url, method, data=None, files=None, headers=None,
                         raw=False, send_as_json=True, content_type=None,
@@ -144,13 +143,14 @@ class AmigoCloud(object):
         full_url = self.build_url(url)
 
         # Add token (if it's not already there)
-        if self._token:
+        token = self.get_token()
+        if token:
             parsed = list(parse.urlparse(full_url))
             if not parsed[4]:  # query
-                parsed[4] = 'token=%s' % self._token
+                parsed[4] = 'token=%s' % token
                 full_url = parse.urlunparse(parsed)
             elif 'token' not in parse.parse_qs(parsed[4]):
-                parsed[4] += '&token=%s' % self._token
+                parsed[4] += '&token=%s' % token
                 full_url = parse.urlunparse(parsed)
         headers = headers or {}
 
@@ -166,11 +166,12 @@ class AmigoCloud(object):
         method = getattr(requests, method, None)
         response = method(full_url, data=data, files=files, headers=headers,
                           **request_kwargs)
-        self.check_for_errors(response)  # Raise exception if something failed
-
-        if raw or not response.content:
-            return response.content
-        return json.loads(response.text)
+        if self.is_good(response):  # Raise exception if something failed
+            if raw or not response.content:
+                return response.content
+            return json.loads(response.text)
+        else:
+            return None
 
     def post(self, url, data=None, files=None, headers=None, raw=False,
              send_as_json=True, content_type=None, **request_kwargs):

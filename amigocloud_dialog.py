@@ -43,7 +43,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         super(AmigoCloudDialog, self).__init__(parent)
 
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
-        self.amigo_api = AmigoAPI(self.get_token())
+        self.amigo_api = AmigoAPI(self.settings)
         self.projects_list = self.amigo_api.fetch_project_list(False)
         self.iconSize = QSize(50, 50)
         self.setupUi(self)
@@ -74,10 +74,11 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def settings_pressed(self):
         dialog = SettingsDialog()
         dialog.show()
-        result = dialog.exec_()
-        # See if OK was pressed
-        if result:
-            self.fetch_project_list()
+        dialog.exec_()
+        self.fetch_project_list()
+
+    def get_token(self):
+        return self.amigo_api.get_token()
 
     def get_name(self):
         return self.settings.value('nameValue')
@@ -88,11 +89,8 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def get_dataset_id(self):
         return self.settings.value('datasetIdValue')
 
-    def get_token(self):
-        return self.settings.value('tokenValue')
-
     def load_image(self, url):
-        url = url + '?token=' + os.environ['AMIGOCLOUD_API_KEY']
+        url = url + '?token=' + self.amigo_api.get_token()
         data = urllib.request.urlopen(url).read()
         image = QtGui.QImage()
         image.loadFromData(data)
@@ -106,8 +104,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
     def fetch_project_list(self):
         self.projects_list = self.amigo_api.fetch_project_list(False)
-        if len(self.projects_list) > 0:
-            self.fill_project_list()
+        self.fill_project_list()
 
     def project_clicked(self, item):
         self.fill_datasets_list(str(item.data(Qt.UserRole)))
@@ -119,6 +116,7 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
 
     def fill_project_list(self):
         self.p_list_widget.clear()
+        self.ds_list_widget.clear()
         for project in self.projects_list:
             p_url = project["url"]
             p_id = project["id"]

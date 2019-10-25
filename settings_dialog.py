@@ -13,7 +13,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         super(SettingsDialog, self).__init__(parent)
         self.setupUi(self)
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
-        self.amigo_api = AmigoAPI(self.get_token())
+        self.amigo_api = AmigoAPI(self.settings)
 
         self.token_lineEdit = self.findChild(QLineEdit, 'token_lineEdit')
         self.token_lineEdit.editingFinished.connect(self.on_token_changed)
@@ -23,7 +23,7 @@ class SettingsDialog(QDialog, FORM_CLASS):
         try:
             self.api_url = os.environ['AMIGOCLOUD_API_URL']
         except:
-            self.api_url = 'https://www.amigocloud.com/api/v1'
+            self.api_url = 'https://app.amigocloud.com/api/v1'
 
         self.url_lineEdit = self.findChild(QLineEdit, 'url_lineEdit')
         self.url_lineEdit.editingFinished.connect(self.on_url_changed)
@@ -33,13 +33,11 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def on_token_changed(self):
         token = self.token_lineEdit.text()
         self.settings.setValue('tokenValue', token)
-        self.amigo_api.set_token(token)
 
     def on_url_changed(self):
         url = self.url_lineEdit.text()
         os.environ['AMIGOCLOUD_API_URL'] = url
         self.settings.setValue('urlValue', url)
-        self.amigo_api.set_token(url)
 
     def get_token(self):
         return self.settings.value('tokenValue')
