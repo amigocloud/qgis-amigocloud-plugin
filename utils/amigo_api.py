@@ -38,10 +38,15 @@ class AmigoAPI:
     def fetch_project_list(self, use_cache=False):
         uri = self.base_url + '/api/v1/me/projects?summary'
         resp = self.fetch(uri, use_cache)
-        if resp is not None and 'results' in resp:
-            return resp['results']
-        else:
-            return []
+        projects = resp['results']
+        next_page_uri = resp["next"]
+        while next_page_uri is not None:
+            resp = self.fetch(next_page_uri, use_cache)
+            next_page_uri = resp["next"]
+            if resp is not None and 'results' in resp:
+                for project in resp['results']:
+                    projects.append(project)
+        return projects
 
     def fetch_dataset_list(self, project_id):
         dataset_url = self.base_url + '/api/v1/users/0/projects/' + project_id + '/datasets?summary'
