@@ -41,10 +41,9 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
     def __init__(self, parent=None):
         """Constructor."""
         super(AmigoCloudDialog, self).__init__(parent)
-
+        self.projects_list = []
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
         self.amigo_api = AmigoAPI(self.settings)
-        self.projects_list = self.amigo_api.fetch_project_list(False)
         self.iconSize = QSize(50, 50)
         self.setupUi(self)
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
@@ -103,8 +102,10 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         return icon
 
     def fetch_project_list(self):
-        self.projects_list = self.amigo_api.fetch_project_list(False)
-        self.fill_project_list()
+        token = self.settings.value('tokenValue')
+        if token:
+            self.projects_list = self.amigo_api.fetch_project_list(False)
+            self.fill_project_list()
 
     def project_clicked(self, item):
         self.fill_datasets_list(str(item.data(Qt.UserRole)))
