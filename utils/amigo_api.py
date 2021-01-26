@@ -38,15 +38,18 @@ class AmigoAPI:
     def fetch_project_list(self, use_cache=False):
         uri = self.base_url + '/api/v1/me/projects?summary'
         resp = self.fetch(uri, use_cache)
-        projects = resp['results']
-        next_page_uri = resp["next"]
-        while next_page_uri is not None:
-            resp = self.fetch(next_page_uri, use_cache)
+        if resp is not None and 'results' in resp:
+            projects = resp['results']
             next_page_uri = resp["next"]
-            if resp is not None and 'results' in resp:
-                for project in resp['results']:
-                    projects.append(project)
-        return projects
+            while next_page_uri is not None:
+                resp = self.fetch(next_page_uri, use_cache)
+                next_page_uri = resp["next"]
+                if resp is not None and 'results' in resp:
+                    for project in resp['results']:
+                        projects.append(project)
+            return projects
+        else:
+            return []
 
     def fetch_dataset_list(self, project_id):
         dataset_url = self.base_url + '/api/v1/users/0/projects/' + project_id + '/datasets?summary'
@@ -65,7 +68,8 @@ class AmigoAPI:
             return []
 
     def fetch_schema(self, usr_id, project_id, dataset_id, use_cache):
-        url = self.base_url + "/api/v1/users/" + str(usr_id) + "/projects/" + str(project_id) + "/datasets/" + str(dataset_id) + "/schema"
+        url = self.base_url + "/api/v1/users/" + str(usr_id) + "/projects/" + str(project_id) + "/datasets/" + str(
+            dataset_id) + "/schema"
         r = self.fetch(url, use_cache)
         if r:
             return r['schema']
@@ -144,4 +148,3 @@ class AmigoAPI:
             except Exception as e:
                 print("Error: send_analytics_event() {}".format(e))
             requests.get(url)
-
