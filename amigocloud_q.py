@@ -196,7 +196,7 @@ class AmigoCloudQ:
             if self.dlg.get_project_id() and self.dlg.get_dataset_id():
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Added (QGIS-plugin)",
-                                                        self.dlg.amigo_api.ac.get_user_email())
+                                                        self.dlg.amigo_api.get_user_email())
                 if len(self.dlg.get_token()) > 0:
                     uri = "AmigoCloud:" + self.dlg.get_project_id() + " datasets=" + self.dlg.get_dataset_id() + \
                           " AMIGOCLOUD_API_KEY=" + self.dlg.get_token()
@@ -213,4 +213,4 @@ class AmigoCloudQ:
             else:
                 self.dlg.amigo_api.send_analytics_event("User",
                                                         "Layer Add Failed (QGIS-plugin)",
-                                                        self.dlg.amigo_api.ac.get_user_email())
+                                                        self.dlg.amigo_api.get_user_email())

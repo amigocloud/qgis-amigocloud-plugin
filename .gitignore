@@ -1,3 +1,4 @@
 *.pyc
 .idea/workspace.xml
 .pytest_cache
+.idea

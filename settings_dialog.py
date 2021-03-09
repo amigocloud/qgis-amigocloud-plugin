@@ -9,8 +9,9 @@ FORM_CLASS, _ = uic.loadUiType(os.path.join(
 
 
 class SettingsDialog(QDialog, FORM_CLASS):
-    def __init__(self, parent=None):
+    def __init__(self, on_token_changed_callback, parent=None):
         super(SettingsDialog, self).__init__(parent)
+        self.on_token_changed_callback = on_token_changed_callback
         self.setupUi(self)
         self.settings = QSettings('AmigoCloud', 'QGIS.Plugin')
         self.amigo_api = AmigoAPI(self.settings)
@@ -33,6 +34,8 @@ class SettingsDialog(QDialog, FORM_CLASS):
     def on_token_changed(self):
         token = self.token_lineEdit.text()
         self.settings.setValue('tokenValue', token)
+        if self.on_token_changed_callback is not None:
+            self.on_token_changed_callback()
 
     def on_url_changed(self):
         url = self.url_lineEdit.text()

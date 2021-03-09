@@ -52,28 +52,26 @@ class AmigoCloudDialog(QDialog, FORM_CLASS):
         self.ds_list_widget = self.findChild(QListWidget, 'datasets_listWidget')
         self.ds_list_widget.itemClicked.connect(self.dataset_clicked)
 
-        self.apiKeyValue = self.settings.value('apiKeyValue')
 
         self.user_label = self.findChild(QLabel, 'user_label')
-        self.user_label.setText('User: ' + self.amigo_api.get_user_name())
 
         self.p_list_widget = self.findChild(QListWidget, 'projects_listWidget')
-
         self.setFixedSize(800, 460)
-
+        self.user_label.setText('User: ' + self.amigo_api.get_user_name())
         self.amigo_api.send_analytics_event("User",
                                             "Start (QGIS-plugin)",
-                                            self.amigo_api.ac.get_user_email())
-
+                                            self.amigo_api.get_user_email())
+        self.fetch_project_list()
         self.settings_button = self.findChild(QToolButton, 'settings_button')
         self.settings_button.clicked.connect(self.settings_pressed)
 
-        self.fetch_project_list()
-
     def settings_pressed(self):
-        dialog = SettingsDialog()
+        dialog = SettingsDialog(self.on_token_changed)
         dialog.show()
         dialog.exec_()
+
+    def on_token_changed(self):
+        self.amigo_api = AmigoAPI(self.settings)
         self.fetch_project_list()
 
     def get_token(self):

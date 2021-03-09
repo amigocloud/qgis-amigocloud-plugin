@@ -12,17 +12,19 @@ from PyQt5.QtCore import QSettings
 class AmigoAPI:
     def __init__(self, settings):
         self.settings = settings
+        self._user_email = ''
+        self._user_id = 0
         self.base_url = 'https://app.amigocloud.com'
         self.plugin_version = "0.13"
         self.cm = CacheManager()
         self.initAC()
 
     def initAC(self):
-        self.ac = AmigoCloud(self.settings, base_url=self.base_url)
+        self.ac = AmigoCloud(self.get_token(), base_url=self.base_url)
         self.mixpanel_token = self.fetch_mixpanel_token()
 
     def get_token(self):
-        return self.settings.value('tokenValue')
+        return self.settings.value('tokenValue', '')
 
     def fetch(self, uri, use_cache):
         if use_cache:
@@ -123,7 +125,7 @@ class AmigoAPI:
     def send_analytics_event(self, category, action, label):
         if not self.mixpanel_token:
             return
-        email = self.ac.get_user_email().lower()
+        email = self.get_user_email().lower()
         if email is not None and "@" in email:
             e = {
                 "event": action,
@@ -135,7 +137,7 @@ class AmigoAPI:
                     "label": label,
                     "email": email,
                     "$email": email,
-                    "user_id": str(self.ac.get_user_id()),
+                    "user_id": str(self.get_user_id()),
                     "plugin-version": self.plugin_version,
                     "server": self.base_url
                 }
@@ -148,3 +150,13 @@ class AmigoAPI:
             except Exception as e:
                 print("Error: send_analytics_event() {}".format(e))
             requests.get(url)
+
+    def get_user_email(self):
+        if not self._user_email:
+            response = self.ac.get('/me')
+            if response is not None:
+                if 'email' in response:
+                    self._user_email = response['email']
+                if 'id' in response:
+                    self._user_id = response['id']
+        return str(self._user_email)
